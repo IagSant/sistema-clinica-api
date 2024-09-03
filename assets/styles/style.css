@@ -1,6 +1,8 @@
-@charset "UTF-8";
-
 body {
     background-color: #efeee7;
     color: #485935;
+}
+
+figure.bordas-fotos img {
+    border: 6px solid #fbfbfb;
 }
