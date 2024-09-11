@@ -1,10 +1,76 @@
+@charset "UTF-8";
+
+@font-face {
+    font-family: 'fontelogo';
+    src: url("/BillionMiracles.otf");
+}
+
+@font-face {
+    font-family: 'titulocorpo';
+    src: url(/PlayfairDisplay.ttf);
+}
+
+@font-face {
+    font-family: 'textocorpo';
+    src: url(/Montserrat.otf);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+
+}
+
 body {
-    background-color: #efeee7;
+    background-color: #485935;
     color: #485935;
 }
 
+div#interface {
+    width: 1500px;
+    background-color: #efeee7;
+    margin: 100px auto 0px auto;
+}
+
+header#cabecalho img#icone {
+    position: absolute;
+    right: 1700px;
+    top: 10px;
+
+}
+
+header#cabecalho {
+    border-bottom: 1px #000000 solid;
+    height: 150px;
+    background: url(/assets/images/logomarca_site.jpg) no-repeat 30px 30px;
+    background-color: #efeee7;
+}
+
+header#cabecalho h1 {
+    text-align: center;
+    font-family: 'fontelogo';
+    color: #809671;
+    font-size: 90px;
+    font-weight: 300;
+    padding-top: 30px;
+}
+
+header#cabecalho h2 {
+    text-align: center;
+    font-weight: 200;
+    font-family: sans-serif;
+    color: #809671;
+    font-size: 12px;
+}
+
 figure.bordas-fotos img {
+    display: block;
     border: 6px solid #fbfbfb;
+    margin: 100px;
+    margin-left: auto;
+    margin-right: auto;
+
 }
 
 nav#menu {
@@ -15,8 +81,8 @@ nav#menu ul {
     list-style: none;
     text-transform: uppercase;
     position: absolute;
-    top: -20px;
-    left: 1100px;
+    top: 0px;
+    left: 1000px;
 }
 
 nav#menu li {
@@ -24,8 +90,50 @@ nav#menu li {
     background-color: #cadbb7;
     padding: 10px;
     margin: 2px;
+    -webkit-transition: background-color 1s;
+    -o-transition: background-color 1s;
+    transition: background-color 1s;
+}
+
+nav#menu li:hover {
+    background-color: #809671;
 }
 
 nav#menu h1 {
-    display: none
+    display: none;
+}
+
+nav#menu a {
+    color: #485935;
+    text-decoration: none;
+}
+
+nav#menu a:hover {
+    color: #efeee7;
+}
+
+section#corpo h2 {
+    display: block;
+    text-align: center;
+    font-family: 'titulocorpo';
+    margin: 25px;
+}
+
+section#corpo h3 {
+    font-family: 'titulocorpo';
+    margin: 50px;
+}
+
+section#corpo p {
+    font-family: 'textocorpo';
+    margin: 50px;
+}
+
+section#corpo ul {
+    display: block;
+    font-family: 'textocorpo';
+    margin: 50px;
+    list-style: inside;
+    text-align: left;
+    list-style-type: circle;
 }
