@@ -1,18 +1,17 @@
-@charset "UTF-8";
-
 @font-face {
-    font-family: 'fontelogo';
-    src: url("/BillionMiracles.otf");
+    font-family: 'fontetitulo';
+    src: url(/assets/fonts/BillionMiracles.otf);
 }
 
 @font-face {
     font-family: 'titulocorpo';
-    src: url(/PlayfairDisplay.ttf);
+    src: url(/assets/fonts/PlayfairDisplay.ttf);
 }
 
 @font-face {
     font-family: 'textocorpo';
-    src: url(/Montserrat.otf);
+    src: url(/assets/fonts/Montserrat.otf);
+}
 
 :root {
     --background-color: #efeee7;
