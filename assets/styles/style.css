@@ -13,24 +13,99 @@
 @font-face {
     font-family: 'textocorpo';
     src: url(/Montserrat.otf);
+
+:root {
+    --background-color: #efeee7;
+    --white-color: #fbfbfb;
+    --primary-color: #485935;
+    --secundary-color: #809671;
+    --lightgreen-color: #cadbb7;
+    --default-margin: 16px;
+    --minimum-margin: calc(var(--default-margin)/2);
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    text-decoration: none;
+    font-family: 'textocorpo', sans-serif;
 
 }
 
 body {
     background-color: #485935;
     color: #485935;
+    padding: 0 20px;
+}
+
+nav {
+    background-color: var(--primary-color);
+    width: 100%;
+    padding: var(--default-margin);
+}
+
+nav ul {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+}
+
+nav li {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px 8px;
+    background-color: var(--secundary-color);
+}
+
+
+nav a {
+    color: var(--lightgreen-color);
+    font-weight: 700;
+}
+
+nav a:hover {
+    color: var(--white-color);
+}
+
+#cabecalho {
+    display: flex;
+    width: 100%;
+    border-bottom: 1px solid var(--primary-color);
+    padding: var(--default-margin);
+    align-items: center;
+}
+
+#cabecalho img {
+    position: absolute;
+}
+
+#titulo {
+    text-align: center;
+    width: 100%;
+}
+
+#titulo h1 {
+    font-family: 'fontetitulo';
+    font-size: 90px;
+    font-weight: 300;
+}
+
+#titulo h2 {
+    font-size: 12px;
+    font-weight: 200;
+}
+
+p {
+    text-align: justify;
 }
 
 div#interface {
-    width: 1500px;
+    max-width: 1200px;
     background-color: #efeee7;
-    margin: 100px auto 0px auto;
+    margin: 0 auto;
+
 }
 
 header#cabecalho img#icone {
