@@ -1,16 +1,16 @@
 @font-face {
     font-family: 'fontetitulo';
-    src: url(/assets/fonts/BillionMiracles.otf);
+    src: url(../fonts/BillionMiracles.otf);
 }
 
 @font-face {
     font-family: 'titulocorpo';
-    src: url(/assets/fonts/PlayfairDisplay.ttf);
+    src: url(../fonts/PlayfairDisplay.ttf);
 }
 
 @font-face {
     font-family: 'textocorpo';
-    src: url(/assets/fonts/Montserrat.otf);
+    src: url(../fonts/Montserrat.otf);
 }
 
 :root {
@@ -29,7 +29,7 @@
     box-sizing: border-box;
     text-decoration: none;
     font-family: 'textocorpo', sans-serif;
-
+    scroll-behavior: smooth;
 }
 
 body {
@@ -139,13 +139,77 @@ header#cabecalho h2 {
     font-size: 12px;
 }
 
-figure.bordas-fotos img {
-    display: block;
-    border: 6px solid #fbfbfb;
-    margin: 100px;
-    margin-left: auto;
-    margin-right: auto;
+section#sobremim {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 70px;
+}
 
+section#terapia {
+    margin-top: 70px
+}
+
+section#consultas {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 70px;
+}
+
+section#demandas {
+    margin-top: 70px
+}
+
+section#psicoterapia {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 70px;
+}
+
+section#beneficios {
+    margin-top: 70px;
+}
+
+.beneficios {
+    display: flex;
+    justify-content: center;
+    font-family: 'textocorpo';
+    color: var(--primary-color);
+    text-align: center;
+    font-size: 15px;
+    font-weight: 400;
+}
+
+
+
+.bordas-fotos img {
+    border: 12px #fbfbfb solid;
+    border-bottom: 50px #fbfbfb solid;
+    margin-right: 100px;
+    margin-left: 100px;
+    box-shadow: rgba(0, 0, 0, 0.664) 0px 5px 15px;
+}
+
+div.beneficios {
+    flex-wrap: wrap;
+}
+
+div.card h4 {
+    display: flex;
+    align-items: start;
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.beneficios p {
+    margin: 10px;
+}
+
+div.duvidas {
+    margin-bottom: 100px;
 }
 
 nav#menu {
@@ -187,24 +251,26 @@ nav#menu a:hover {
     color: #efeee7;
 }
 
-section#corpo h2 {
+
+
+main h2 {
     display: block;
     text-align: center;
     font-family: 'titulocorpo';
     margin: 25px;
 }
 
-section#corpo h3 {
+main h3 {
     font-family: 'titulocorpo';
     margin: 50px;
 }
 
-section#corpo p {
+main p {
     font-family: 'textocorpo';
     margin: 50px;
 }
 
-section#corpo ul {
+main ul {
     display: block;
     font-family: 'textocorpo';
     margin: 50px;
@@ -229,7 +295,7 @@ section#corpo ul {
 
 .card {
     margin: 10px;
-    margin-bottom: 150px;
+    margin-bottom: 10px;
     background-color: white;
     width: 300px;
     height: 300px;
