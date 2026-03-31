@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pacientes</title>
+
+</head>
+<style>
+    body {
+        margin: 0;
+        font-family: Arial;
+        background: #f5f5f5;
+    }
+
+    header {
+        background: #2c3e50;
+        color: white;
+        padding: 15px 20px;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .topo {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+
+    .controls {
+        display: flex;
+        gap: 10px;
+    }
+
+    input,
+    select {
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+
+    .lista {
+        background: white;
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    .paciente {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+    }
+
+    .paciente:hover {
+        background: #f1f1f1;
+    }
+
+    /* MODAL */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal.show {
+        display: flex;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        width: 400px;
+    }
+
+    .modal input {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .consulta {
+        background: #f1f1f1;
+        padding: 8px;
+        margin-top: 5px;
+        border-radius: 6px;
+    }
+
+    button {
+        padding: 10px;
+        border: none;
+        background: #2c3e50;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+</style>
+
+
+</head>
+
+<body>
+
+    <header>👤 Pacientes</header>
+
+    <div class="container">
+
+
+        <div class="topo">
+
+            <a href="agenda.html">← Voltar</a>
+
+            <div class="controls">
+                <input type="text" id="busca" placeholder="🔍 Buscar">
+
+                <select id="filtro">
+                    <option value="nome-asc">Nome A-Z</option>
+                    <option value="nome-desc">Nome Z-A</option>
+                    <option value="data-asc">Data ↑</option>
+                    <option value="data-desc">Data ↓</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="lista" id="lista-pacientes"></div>
+
+
+    </div>
+
+    <!-- MODAL -->
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+
+
+            <h3>Ficha do Paciente</h3>
+
+            <input id="nome">
+            <input id="telefone">
+            <input id="email">
+
+            <button onclick="salvar()">Salvar</button>
+
+            <h4>Histórico</h4>
+            <div id="historico"></div>
+
+            <br>
+            <button onclick="fechar()">Fechar</button>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        let pacientes = []
+        let pacienteSelecionado = null
+
+        async function carregarPacientes() {
+            const res = await fetch("http://localhost:8080/api/pacientes")
+            pacientes = await res.json()
+            renderizar()
+        }
+
+        function renderizar() {
+
+            const lista = document.getElementById("lista-pacientes")
+            const busca = document.getElementById("busca").value.toLowerCase()
+            const filtro = document.getElementById("filtro").value
+
+            let filtrados = pacientes.filter(p =>
+                (p.nome || "").toLowerCase().includes(busca)
+            )
+
+            if (filtro === "nome-asc") {
+                filtrados.sort((a, b) => a.nome.localeCompare(b.nome))
+            }
+
+            if (filtro === "nome-desc") {
+                filtrados.sort((a, b) => b.nome.localeCompare(a.nome))
+            }
+
+            if (filtro === "data-asc") {
+                filtrados.sort((a, b) => new Date(a.dataCriacao) - new Date(b.dataCriacao))
+            }
+
+            if (filtro === "data-desc") {
+                filtrados.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao))
+            }
+
+            lista.innerHTML = ""
+
+            filtrados.forEach(p => {
+
+                const div = document.createElement("div")
+                div.classList.add("paciente")
+
+                div.innerText = p.nome
+
+                div.onclick = () => abrirFicha(p)
+
+                lista.appendChild(div)
+            })
+        }
+
+        function abrirFicha(p) {
+
+            pacienteSelecionado = p
+
+            document.getElementById("nome").value = p.nome
+            document.getElementById("telefone").value = p.telefone || ""
+            document.getElementById("email").value = p.email || ""
+
+            carregarHistorico(p.id)
+
+            document.getElementById("modal").classList.add("show")
+        }
+
+        async function carregarHistorico(id) {
+
+            const res = await fetch(`http://localhost:8080/api/consultas/paciente/${id}`)
+            const consultas = await res.json()
+
+            const historico = document.getElementById("historico")
+            historico.innerHTML = ""
+
+            consultas.forEach(c => {
+
+                const div = document.createElement("div")
+                div.classList.add("consulta")
+
+                const data = new Date(c.dataHora).toLocaleString("pt-BR")
+
+                div.innerHTML = `${data} - ${c.status}`
+
+                historico.appendChild(div)
+            })
+        }
+
+        async function salvar() {
+
+            await fetch(`http://localhost:8080/api/pacientes/${pacienteSelecionado.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    nome: document.getElementById("nome").value,
+                    telefone: document.getElementById("telefone").value,
+                    email: document.getElementById("email").value
+                })
+            })
+
+            alert("Paciente atualizado!")
+            fechar()
+            carregarPacientes()
+        }
+
+        function fechar() {
+            document.getElementById("modal").classList.remove("show")
+        }
+
+        document.getElementById("busca").addEventListener("input", renderizar)
+        document.getElementById("filtro").addEventListener("change", renderizar)
+
+        carregarPacientes()
+
+    </script>
+
+</body>
+
+</html>

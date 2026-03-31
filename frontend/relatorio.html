@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f5f5f5;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .topo {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .cards {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .card h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <header>📊 Relatório Geral</header>
+
+    <div class="container">
+
+        <div class="topo">
+            <a href="agenda.html">← Voltar</a>
+
+            <select id="periodo">
+                <option value="dia">Hoje</option>
+                <option value="semana">Semana</option>
+                <option value="mes">Mês</option>
+            </select>
+        </div>
+
+        <div class="cards">
+            <div class="card">
+                <h2 id="leads">0</h2>
+                <p>Leads</p>
+            </div>
+            <div class="card">
+                <h2 id="total">0</h2>
+                <p>Total</p>
+            </div>
+            <div class="card">
+                <h2 id="confirmadas">0</h2>
+                <p>Confirmadas</p>
+            </div>
+            <div class="card">
+                <h2 id="pendentes">0</h2>
+                <p>Pendentes</p>
+            </div>
+            <div class="card">
+                <h2 id="canceladas">0</h2>
+                <p>Canceladas</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+
+        let consultas = []
+
+        async function carregar() {
+            console.log("🔄 carregando relatório...")
+
+            try {
+                const res = await fetch("http://localhost:8080/api/consultas?nocache=" + Date.now())
+                consultas = await res.json()
+
+                console.log("📦 consultas:", consultas)
+
+                aplicarFiltro()
+                carregarLeads()
+
+            } catch (err) {
+                console.error("❌ erro:", err)
+            }
+        }
+
+        function aplicarFiltro() {
+
+            const periodo = document.getElementById("periodo").value
+            const hoje = new Date()
+
+            let filtradas = consultas.filter(c => {
+
+                const data = new Date(c.dataHora)
+
+                if (periodo === "dia") {
+                    return data.getDate() === hoje.getDate() &&
+                        data.getMonth() === hoje.getMonth() &&
+                        data.getFullYear() === hoje.getFullYear()
+                }
+
+                if (periodo === "semana") {
+
+                    const inicioSemana = new Date(hoje)
+                    inicioSemana.setDate(hoje.getDate() - hoje.getDay())
+
+                    const fimSemana = new Date(inicioSemana)
+                    fimSemana.setDate(inicioSemana.getDate() + 6)
+
+                    return data >= inicioSemana && data <= fimSemana
+                }
+
+                if (periodo === "mes") {
+                    return data.getMonth() === hoje.getMonth() &&
+                        data.getFullYear() === hoje.getFullYear()
+                }
+
+                return true
+            })
+
+            atualizarCards(filtradas)
+        }
+
+        function atualizarCards(lista) {
+
+            let confirmadas = 0
+            let pendentes = 0
+            let canceladas = 0
+
+            lista.forEach(c => {
+                const status = c.status?.toUpperCase() || "PENDENTE"
+
+                if (status === "CONFIRMADO") confirmadas++
+                if (status === "PENDENTE") pendentes++
+                if (status === "CANCELADO") canceladas++
+            })
+
+            document.getElementById("total").innerText = lista.length
+            document.getElementById("confirmadas").innerText = confirmadas
+            document.getElementById("pendentes").innerText = pendentes
+            document.getElementById("canceladas").innerText = canceladas
+        }
+
+        // 🔥 LEADS
+        async function carregarLeads() {
+
+            try {
+                const res = await fetch("http://localhost:8080/api/leads?nocache=" + Date.now())
+                const leads = await res.json()
+
+                console.log("📦 leads:", leads)
+
+                const periodo = document.getElementById("periodo").value
+                const hoje = new Date()
+
+                const filtrados = leads.filter(l => {
+
+                    let data = new Date(
+                        l.data || l.dataCadastro || l.createdAt || l.dataHora
+                    )
+
+                    // 🔥 CORREÇÃO PRINCIPAL
+                    if (isNaN(data)) {
+                        data = new Date()
+                    }
+
+                    if (periodo === "dia") {
+                        return data.getDate() === hoje.getDate() &&
+                            data.getMonth() === hoje.getMonth() &&
+                            data.getFullYear() === hoje.getFullYear()
+                    }
+
+                    if (periodo === "semana") {
+
+                        const inicioSemana = new Date(hoje)
+                        inicioSemana.setDate(hoje.getDate() - hoje.getDay())
+
+                        const fimSemana = new Date(inicioSemana)
+                        fimSemana.setDate(inicioSemana.getDate() + 6) 
+
+                        return data >= inicioSemana && data <= fimSemana
+                    }
+
+                    if (periodo === "mes") {
+                        return data.getMonth() === hoje.getMonth() &&
+                            data.getFullYear() === hoje.getFullYear()
+                    }
+
+                    return true
+                })
+
+                document.getElementById("leads").innerText = filtrados.length
+
+            } catch (err) {
+                console.error("Erro ao carregar leads")
+            }
+        }
+
+        // 🔥 troca de filtro
+        document.getElementById("periodo").addEventListener("change", () => {
+            aplicarFiltro()
+            carregarLeads()
+        })
+
+        // 🔥 inicia
+        carregar()
+        setInterval(carregar, 5000)
+
+    </script>
+
+</body>
+
+</html>

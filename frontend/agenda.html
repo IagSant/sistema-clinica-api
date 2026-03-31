@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Agenda Profissional</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+
+    <style>
+        /* BOTÃO ☰ */
+        #menu-btn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            background: #2c3e50;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            z-index: 10000;
+        }
+
+        /* MENU LATERAL */
+        #menu-lateral {
+            position: fixed;
+            top: 0;
+            left: -220px;
+            width: 220px;
+            height: 100%;
+            background: #2c3e50;
+            color: white;
+            padding-top: 60px;
+            transition: 0.3s;
+            z-index: 9999;
+        }
+
+        /* MENU ABERTO */
+        #menu-lateral.show {
+            left: 0;
+        }
+
+        /* ITENS */
+        #menu-lateral ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #menu-lateral li {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        #menu-lateral li:hover {
+            background: #34495e;
+        }
+
+        /* FUNDO ESCURO */
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+
+            background: rgba(0, 0, 0, 0.4);
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+
+            z-index: 9999;
+            /* 🔥 ESSENCIAL */
+        }
+
+        /* QUANDO ABRIR */
+        .popup.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* CAIXA DO POPUP */
+        .popup-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 320px;
+            max-width: 90%;
+
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+
+            text-align: left;
+            animation: aparecer 0.25s ease;
+        }
+
+        /* TÍTULO */
+        .popup-content h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+
+        /* TEXTOS */
+        .popup-content p {
+            margin: 8px 0;
+            color: #555;
+            font-size: 14px;
+        }
+
+        /* BOTÃO */
+        .popup-content button {
+            margin-top: 15px;
+            width: 100%;
+            padding: 10px;
+
+            border: none;
+            border-radius: 6px;
+
+            background: #2c3e50;
+            color: white;
+
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* HOVER */
+        .popup-content button:hover {
+            background: #1a252f;
+        }
+
+        /* ANIMAÇÃO */
+        @keyframes aparecer {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f5f5f5;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ESQUERDA */
+        .sidebar-left {
+            width: 260px;
+            background: white;
+            border-right: 1px solid #ddd;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* MINI CALENDÁRIO */
+        #miniCalendar {
+            margin-top: 50px;
+            font-size: 12px;
+            width: 250px;
+            height: 250px;
+        }
+
+        #lista-leads div {
+            background: #f1f1f1;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        #contador {
+            background: red;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        /* HEADER MINI */
+        #miniCalendar .fc-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #miniCalendar .fc-toolbar-title {
+            font-size: 14px !important;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        #miniCalendar .fc-button {
+            padding: 2px 6px !important;
+            font-size: 12px !important;
+        }
+
+        /* NÃO ESTICAR */
+        #miniCalendar .fc {
+            height: 100% !important;
+        }
+
+        #miniCalendar .fc-daygrid-day-frame {
+            height: 28px !important;
+        }
+
+        /* ESCONDE DIAS DE OUTROS MESES (extra visual) */
+        #miniCalendar .fc-day-other {
+            display: none;
+        }
+
+        /* CENTRO */
+        .main {
+            flex: 1;
+            padding: 10px;
+        }
+
+        #calendar {
+            width: 100%;
+            height: calc(100vh - 20px);
+            background: white;
+            border-radius: 10px;
+        }
+
+        /* REMOVE SCROLL */
+        .fc-scroller {
+            overflow: hidden !important;
+        }
+
+        /* DIREITA */
+        .sidebar-right {
+            width: 300px;
+            background: white;
+            border-left: 1px solid #ddd;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        /* DATA */
+        #dataSelecionada {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        #dataSelecionada div:first-child {
+            text-transform: capitalize;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #dataSelecionada div:last-child {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* EVENTOS */
+        .evento {
+            background: #f1f1f1;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        /* HORÁRIOS */
+        .fc-timegrid-slot {
+            height: 38px !important;
+        }
+
+        .fc-timegrid-axis {
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- BOTÃO MENU -->
+    <div id="menu-btn">☰</div>
+
+    <!-- MENU LATERAL -->
+    <div id="menu-lateral">
+        <ul>
+            <li onclick="irPara('leads.html')">Leads</li>
+            <li onclick="irPara('pacientes.html')">Pacientes</li>
+            <li onclick="irPara('agendar.html')">Agendar</li>
+            <li onclick="irPara('editar.html')">Editar</li>
+            <li onclick="irPara('relatorio.html')">Relatorio</li>
+        </ul>
+    </div>
+
+    <div class="container">
+
+        <!-- ESQUERDA -->
+        <div class="sidebar-left">
+
+            <div style="width:100%;">
+
+                <!-- MINI CALENDÁRIO -->
+                <div id="miniCalendar"></div>
+
+                <!-- LEADS -->
+                <h4 style="margin-top:20px;">
+                    Leads <span id="contador">(0)</span>
+                </h4>
+
+                <div id="lista-leads"></div>
+
+            </div>
+
+        </div>
+
+        <!-- CENTRO -->
+        <div class="main">
+            <div id="calendar"></div>
+        </div>
+
+        <!-- DIREITA -->
+        <div class="sidebar-right">
+            <div id="dataSelecionada">Selecione um dia</div>
+            <div id="listaEventos"></div>
+        </div>
+
+    </div>
+
+    <div id="lead-popup" class="popup">
+        <div class="popup-content">
+            <h3 id="lead-nome"></h3>
+            <p id="lead-telefone"></p>
+            <p id="lead-email"></p>
+            <p id="lead-mensagem"></p>
+
+            <button onclick="fecharPopup()">Fechar</button>
+        </div>
+    </div>
+
+    <div id="modal-consulta" class="popup">
+        <div class="popup-content">
+
+            <h3 id="modal-nome"></h3>
+            <p id="modal-telefone"></p>
+            <p id="modal-data"></p>
+
+            <!-- 🔥 NOVO CAMPO -->
+            <textarea id="modal-observacao" placeholder="Observações..." style="
+                width:100%;
+                margin-top:10px;
+                padding:8px;
+                border-radius:6px;
+                border:1px solid #ccc;">
+            </textarea>
+
+            <button onclick="salvarEdicao()">Salvar</button>
+
+            <button onclick="desmarcar()">Desmarcar</button>
+            <button onclick="reagendar()">Reagendar</button>
+
+            <button onclick="fecharModal()">Fechar</button>
+
+            <div id="reagendamento-box" style="display:none; margin-top:10px;">
+                <label>Nova data</label>
+                <input type="date" id="novaData">
+
+                <label>Nova hora</label>
+                <select id="novaHora"></select>
+
+                <button onclick="salvarReagendamento()">Salvar novo horário</button>
+            </div>
+
+
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+    <script>
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const calendarEl = document.getElementById('calendar');
+            const miniEl = document.getElementById('miniCalendar');
+
+            const titulo = document.getElementById("dataSelecionada");
+            const lista = document.getElementById("listaEventos");
+
+            function formatarData(data) {
+                const d = new Date(data);
+
+                return {
+                    diaSemana: d.toLocaleDateString('pt-BR', { weekday: 'long' }),
+                    dataFormatada: d.toLocaleDateString('pt-BR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    })
+                };
+            }
+
+            async function carregarEventosDia(data) {
+
+                const response = await fetch(`http://localhost:8080/agenda/dia?data=${data}`);
+                const eventos = await response.json();
+
+                const formatado = formatarData(data);
+
+                titulo.innerHTML = `
+            <div>${formatado.diaSemana}</div>
+            <div>${formatado.dataFormatada}</div>
+        `;
+
+                lista.innerHTML = "";
+
+                if (eventos.length === 0) {
+                    lista.innerHTML = "<p>Nenhum compromisso</p>";
+                    return;
+                }
+
+                eventos.forEach(e => {
+
+                    const horario = new Date(e.horario).toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    const div = document.createElement("div");
+                    div.classList.add("evento");
+
+                    div.innerHTML = `<strong>${horario}</strong><br>${e.descricao}`;
+                    lista.appendChild(div);
+                });
+            }
+
+            // CALENDÁRIO PRINCIPAL
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                locale: 'pt-br',
+
+                height: '100%',
+                expandRows: false,
+
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: ''
+                },
+
+                slotMinTime: "08:00:00",
+                slotMaxTime: "24:00:00",
+                allDaySlot: false,
+
+                dayHeaderContent: function (arg) {
+                    const data = new Date(arg.date);
+                    return data.toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit'
+                    });
+                },
+
+                // 🔥 EVENTOS (COM DADOS EXTRAS)
+                events: async function (fetchInfo, successCallback) {
+
+                    const response = await fetch("http://localhost:8080/api/consultas");
+                    const consultas = await response.json();
+
+                    let eventos = consultas.map(c => {
+
+                        return {
+                            title: "Consulta com " + (c.paciente?.nome || "Paciente"),
+                            start: c.dataHora,
+
+                            color:
+                                c.status === "CONFIRMADO" ? "#2ecc71" :
+                                    c.status === "PENDENTE" ? "#f39c12" :
+                                        "#e74c3c",
+
+                            // 🔥 DADOS PARA O MODAL
+                            extendedProps: {
+                                id: c.id,
+                                nome: c.paciente?.nome,
+                                telefone: c.paciente?.telefone,
+                                observacao: c.observacao // 🔥 ADICIONA ISSO
+                            }
+                        };
+
+                    });
+
+                    successCallback(eventos);
+                },
+
+                // 🔥 CLIQUE NO EVENTO
+                eventClick: async function (info) {
+
+                    const evento = info.event;
+
+                    // 🔥 BUSCA DADOS ATUALIZADOS DO BACKEND
+                    const response = await fetch("http://localhost:8080/api/consultas");
+                    const consultas = await response.json();
+
+                    const consultaAtualizada = consultas.find(c => c.id === evento.extendedProps.id);
+
+                    const consulta = consultaAtualizada;
+
+                    document.getElementById("modal-nome").innerText =
+                        "Paciente: " + (consulta.paciente?.nome || "Sem nome");
+
+                    document.getElementById("modal-telefone").innerText =
+                        "Telefone: " + (consulta.paciente?.telefone || "-");
+
+                    document.getElementById("modal-data").innerText =
+                        "Data: " + new Date(consulta.dataHora).toLocaleString("pt-BR");
+
+                    document.getElementById("modal-observacao").value =
+                        consulta.observacao || "";
+
+                    window.consultaAtual = consulta.id;
+
+                    document.getElementById("modal-consulta").classList.add("show");
+                }
+
+
+            });
+
+            calendar.render();
+            window.calendar = calendar;
+
+            setInterval(() => {
+                calendar.refetchEvents();
+            }, 10000);
+
+            // MINI CALENDÁRIO FINAL
+            const miniCalendar = new FullCalendar.Calendar(miniEl, {
+                initialView: 'dayGridMonth',
+                locale: 'pt-br',
+                height: 220,
+
+                headerToolbar: {
+                    left: 'prev,next',
+                    center: 'title',
+                    right: ''
+                },
+
+                showNonCurrentDates: false,
+                fixedWeekCount: false,
+
+                dateClick: function (info) {
+                    calendar.gotoDate(info.dateStr);
+                    carregarEventosDia(info.dateStr);
+                }
+            });
+
+            miniCalendar.render();
+
+            let leads = [];
+
+            function adicionarLead(nome) {
+                leads.push(nome);
+                atualizarLeads();
+            }
+
+            function irPara(pagina) {
+                window.location.href = pagina
+            }
+
+
+
+            function atualizarLeads() {
+
+                const lista = document.getElementById("lista-leads");
+                const contador = document.getElementById("contador");
+                const contadorTopo = document.getElementById("contador-topo"); // 🔥 NOVO
+
+                lista.innerHTML = "";
+
+                leads.forEach(lead => {
+
+                    const div = document.createElement("div");
+
+                    div.innerText = lead.nome;
+
+                    div.style.cursor = "pointer";
+
+                    div.onclick = () => {
+
+                        document.getElementById("lead-nome").innerText = lead.nome;
+                        document.getElementById("lead-telefone").innerText = "Telefone: " + lead.telefone;
+                        document.getElementById("lead-email").innerText = "Email: " + lead.email;
+                        document.getElementById("lead-mensagem").innerText = "Mensagem: " + lead.mensagem;
+
+                        document.getElementById("lead-popup").classList.add("show");
+                    };
+
+                    lista.appendChild(div);
+                });
+
+                const total = leads.length;
+
+                document.title = total > 0
+                    ? "Agenda Profissional (" + total + ")"
+                    : "Agenda Profissional";
+
+                contador.innerText = "(" + total + ")";
+                if (contadorTopo) {
+                    contadorTopo.innerText = "(" + total + ")";
+                }
+            }
+
+            function carregarLeads() {
+
+                fetch("http://localhost:8080/api/leads")
+                    .then(res => res.json())
+                    .then(data => {
+
+                        leads = data; // 🔥 substitui lista fake
+
+                        atualizarLeads();
+                    });
+            }
+
+
+
+            carregarLeads();
+            setInterval(carregarLeads, 5000);
+
+        });
+
+        function fecharPopup() {
+            document.getElementById("lead-popup").classList.remove("show");
+        }
+
+        const menuBtn = document.getElementById("menu-btn")
+        const menu = document.getElementById("menu-lateral")
+
+        menuBtn.addEventListener("click", () => {
+            menu.classList.toggle("show")
+        })
+
+        function irPara(pagina) {
+            window.location.href = pagina;
+        }
+
+        function fecharModal() {
+            document.getElementById("modal-consulta").classList.remove("show");
+
+            document.getElementById("reagendamento-box").style.display = "none";
+        }
+
+        async function desmarcar() {
+            await fetch(`http://localhost:8080/api/consultas/${window.consultaAtual}`, {
+                method: "DELETE"
+            });
+
+            fecharModal();
+            location.reload();
+        }
+        function reagendar() {
+
+            const box = document.getElementById("reagendamento-box")
+
+            box.style.display = "block"
+
+            const hoje = new Date()
+            document.getElementById("novaData").value =
+                hoje.toISOString().split("T")[0]
+
+            gerarHorarios()
+
+            document.getElementById("novaHora").value = "09:00"
+        }
+        function editar() {
+            alert("Aqui você pode editar observações");
+        }
+
+        async function salvarEdicao() {
+
+            const observacao = document.getElementById("modal-observacao").value
+
+            await fetch(`http://localhost:8080/api/consultas/${window.consultaAtual}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    observacao: observacao
+                })
+            })
+
+            alert("Observação salva!")
+            fecharModal()
+        }
+
+        async function salvarReagendamento() {
+
+            const novaData = document.getElementById("novaData").value
+            const novaHora = document.getElementById("novaHora").value
+
+            const novaDataHora = novaData + "T" + novaHora + ":00"
+
+            const res = await fetch(`http://localhost:8080/api/consultas/${window.consultaAtual}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    dataHora: novaDataHora
+                })
+            })
+
+            if (res.ok) {
+
+                alert("Reagendado!")
+
+                fecharModal()
+
+                // atualiza eventos do calendário
+                window.calendar.refetchEvents()
+
+            } else {
+                alert("Erro ao reagendar")
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+
+            const inputHora = document.getElementById("novaHora")
+
+            inputHora.addEventListener("change", function () {
+
+                let valor = this.value
+                if (!valor) return
+
+                let [hora, minuto] = valor.split(":")
+                minuto = parseInt(minuto)
+
+                if (minuto < 15) minuto = "00"
+                else if (minuto < 45) minuto = "30"
+                else {
+                    minuto = "00"
+                    hora = String((parseInt(hora) + 1)).padStart(2, '0')
+                }
+
+                this.value = hora + ":" + minuto
+            })
+
+        })
+
+        function gerarHorarios() {
+
+            const select = document.getElementById("novaHora")
+
+            select.innerHTML = ""
+
+            for (let h = 8; h <= 23; h++) {
+
+                const hora = String(h).padStart(2, "0")
+
+                const opcao1 = document.createElement("option")
+                opcao1.value = `${hora}:00`
+                opcao1.text = `${hora}:00`
+
+                const opcao2 = document.createElement("option")
+                opcao2.value = `${hora}:30`
+                opcao2.text = `${hora}:30`
+
+                select.appendChild(opcao1)
+                select.appendChild(opcao2)
+            }
+        }
+    </script>
+
+</body>
+
+</html>

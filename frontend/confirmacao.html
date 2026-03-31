@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmação</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #efeee7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            color: #485935;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 12px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .confirmar {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .cancelar {
+            background: #e74c3c;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+
+    <h2>Confirmação de Consulta</h2>
+
+    <p><b>Paciente:</b> <span th:text="${consulta.paciente.nome}"></span></p>
+    <p><b>Data:</b> <span th:text="${consulta.dataHora}"></span></p>
+
+    <form action="/confirmar" method="post">
+        <input type="hidden" name="id" th:value="${consulta.id}">
+        <button class="confirmar">Confirmar</button>
+    </form>
+
+    <form action="/cancelar" method="post">
+        <input type="hidden" name="id" th:value="${consulta.id}">
+        <button class="cancelar">Cancelar</button>
+    </form>
+
+</div>
+
+</body>
+</html>

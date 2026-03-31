@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Consultas</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f5f5f5;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .consulta {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .consulta strong {
+            color: #2c3e50;
+        }
+
+        select, button, input {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background: #2c3e50;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        button:hover {
+            background: #1a252f;
+        }
+
+        .btn-voltar {
+            display: inline-block;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .filtros {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    ✏️ Editar Consultas
+</header>
+
+<div class="container">
+
+    <a href="agenda.html" class="btn-voltar">← Voltar para Agenda</a>
+
+    <!-- 🔥 FILTROS -->
+    <div class="filtros">
+        <input type="text" id="filtroNome" placeholder="Buscar por paciente">
+        <input type="date" id="filtroData">
+        <button onclick="carregarConsultas()">Filtrar</button>
+    </div>
+
+    <div id="lista-consultas"></div>
+
+</div>
+
+<script>
+
+function carregarConsultas() {
+
+    const nomeFiltro = document.getElementById("filtroNome").value.toLowerCase()
+    const dataFiltro = document.getElementById("filtroData").value
+
+    fetch("http://localhost:8080/api/consultas")
+        .then(res => res.json())
+        .then(data => {
+
+            const lista = document.getElementById("lista-consultas")
+            lista.innerHTML = ""
+
+            // 🔥 FILTRO AQUI
+            const filtrados = data.filter(c => {
+
+                const nomePaciente = c.paciente?.nome?.toLowerCase() || ""
+                const dataConsulta = c.dataHora?.split("T")[0] || ""
+
+                const matchNome = nomePaciente.includes(nomeFiltro)
+                const matchData = !dataFiltro || dataConsulta === dataFiltro
+
+                return matchNome && matchData
+            })
+
+            if (filtrados.length === 0) {
+                lista.innerHTML = "<p>Nenhuma consulta encontrada.</p>"
+                return
+            }
+
+            filtrados.forEach(c => {
+
+                const dataFormatada = new Date(c.dataHora).toLocaleString("pt-BR")
+
+                const div = document.createElement("div")
+                div.classList.add("consulta")
+
+                div.innerHTML = `
+                    <strong>${c.paciente?.nome || "Sem nome"}</strong><br>
+                    📅 ${dataFormatada}<br>
+                    Status: <span class="status" id="label-status-${c.id}">${c.status}</span><br>
+
+                    <select id="status-${c.id}">
+                        <option value="PENDENTE">Pendente</option>
+                        <option value="CONFIRMADO">Confirmado</option>
+                        <option value="CANCELADO">Cancelado</option>
+                    </select>
+
+                    <br>
+
+                    <button onclick="atualizarStatus(${c.id})">Salvar</button>
+                `
+
+                lista.appendChild(div)
+
+                // mantém selecionado corretamente
+                document.getElementById("status-" + c.id).value = c.status
+            })
+        })
+}
+
+async function atualizarStatus(id) {
+
+    const novoStatus = document.getElementById("status-" + id).value
+
+    const res = await fetch(`http://localhost:8080/api/consultas/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            status: novoStatus
+        })
+    })
+
+    if (res.ok) {
+
+        document.getElementById("label-status-" + id).innerText = novoStatus
+
+        alert("Status atualizado!")
+
+        // 🔥 atualiza agenda automaticamente
+        if (window.opener && window.opener.calendar) {
+            window.opener.calendar.refetchEvents()
+        }
+
+    } else {
+        alert("Erro ao atualizar")
+    }
+}
+
+// 🔥 filtro automático enquanto digita
+document.getElementById("filtroNome").addEventListener("input", carregarConsultas)
+document.getElementById("filtroData").addEventListener("change", carregarConsultas)
+
+carregarConsultas()
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Agendar Consulta</title>
+
+</head>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial;
+        background: #f5f5f5;
+    }
+
+    header {
+        background: #2c3e50;
+        color: white;
+        padding: 15px 20px;
+        font-size: 18px;
+    }
+
+    .container {
+        padding: 20px;
+        max-width: 500px;
+        margin: auto;
+    }
+
+    form {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .autocomplete {
+        position: relative;
+    }
+
+    #sugestoes {
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+
+        max-height: 150px;
+        overflow-y: auto;
+
+        display: none;
+        z-index: 1000;
+    }
+
+    #sugestoes div {
+        padding: 8px;
+        cursor: pointer;
+    }
+
+    #sugestoes div:hover {
+        background: #f1f1f1;
+    }
+
+    input,
+    select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        margin-bottom: 15px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        background: #2c3e50;
+        color: white;
+        border-radius: 6px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #1a252f;
+    }
+
+    .btn-voltar {
+        display: inline-block;
+        margin-bottom: 15px;
+        padding: 10px 15px;
+        background: #2c3e50;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+    }
+
+    .sucesso {
+        margin-top: 15px;
+        color: green;
+        font-weight: bold;
+    }
+
+    .erro {
+        margin-top: 15px;
+        color: red;
+        font-weight: bold;
+    }
+</style>
+
+
+</head>
+
+<body>
+
+
+    <header>
+        📅 Agendar Consulta
+    </header>
+
+    <div class="container">
+
+        <a href="agenda.html" class="btn-voltar">← Voltar para Agenda</a>
+
+        <form id="formAgendar">
+
+            <div class="autocomplete">
+
+                <label>Nome do paciente</label>
+                <input type="text" id="nomePaciente" placeholder="Nome do paciente" autocomplete="off">
+
+                <div id="sugestoes"></div>
+
+            </div>
+
+            <label>Telefone</label>
+            <input type="text" id="telefone">
+
+            <label>Data</label>
+            <input type="date" id="data" required>
+
+            <label>Hora</label>
+            <select id="hora" required></select>
+
+            <button type="submit">Agendar</button>
+
+            <div id="mensagem"></div>
+
+        </form>
+
+    </div>
+
+    <script>
+
+        const form = document.getElementById("formAgendar")
+        const mensagem = document.getElementById("mensagem")
+
+        // AUTOCOMPLETE (FORA DO SUBMIT)
+        let pacientes = []
+
+        async function carregarPacientes() {
+            const res = await fetch("http://localhost:8080/api/pacientes")
+            pacientes = await res.json()
+        }
+
+        const input = document.getElementById("nomePaciente")
+        const box = document.getElementById("sugestoes")
+
+        input.addEventListener("focus", () => {
+
+            box.innerHTML = ""
+
+            pacientes.forEach(p => {
+
+                const div = document.createElement("div")
+                div.innerText = p.nome
+
+                div.onclick = () => {
+                    input.value = p.nome
+                    input.dataset.id = p.id
+
+                    // 🔥 NOVO: preencher telefone
+                    document.getElementById("telefone").value = p.telefone || ""
+
+                    box.style.display = "none"
+                }
+
+                box.appendChild(div)
+            })
+
+            box.style.display = pacientes.length ? "block" : "none"
+        })
+        document.addEventListener("click", (e) => {
+            if (!e.target.closest(".autocomplete")) {
+                box.style.display = "none"
+            }
+        })
+
+        // CARREGA PACIENTES AO ABRIR A PÁGINA
+        carregarPacientes()
+
+
+        // SUBMIT
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault()
+
+            const pacienteId = input.dataset.id
+            const data = document.getElementById("data").value
+            const hora = document.getElementById("hora").value
+
+            const dataHora = data + "T" + hora + ":00"
+
+            if (!pacienteId) {
+                mensagem.innerHTML = "<p class='erro'>Selecione um paciente da lista.</p>"
+                return
+            }
+
+            try {
+                const res = await fetch("http://localhost:8080/api/salvar-consulta", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams({
+                        pacienteId: pacienteId,
+                        dataHora: dataHora
+                    })
+                })
+
+                if (res.ok) {
+                    mensagem.innerHTML = "<p class='sucesso'>Consulta agendada com sucesso!</p>"
+                    form.reset()
+                } else {
+                    mensagem.innerHTML = "<p class='erro'>Erro ao agendar.</p>"
+                }
+
+            } catch (err) {
+                mensagem.innerHTML = "<p class='erro'>Erro de conexão com servidor.</p>"
+            }
+        })
+
+        function gerarHorarios() {
+            const select = document.getElementById("hora")
+
+            select.innerHTML = ""
+
+            for (let h = 8; h <= 23; h++) {
+                for (let m of ["00", "30"]) {
+
+                    const horaFormatada =
+                        String(h).padStart(2, "0") + ":" + m
+
+                    const option = document.createElement("option")
+                    option.value = horaFormatada
+                    option.textContent = horaFormatada
+
+                    select.appendChild(option)
+                }
+            }
+        }
+
+        // chama quando carregar a página
+        gerarHorarios()
+
+    </script>
+
+
+</body>
+
+</html>
