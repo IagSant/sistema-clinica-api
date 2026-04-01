@@ -5,12 +5,12 @@ O sistema permite controle de pacientes, agendamentos, agenda com calendário pr
 
   Funcionalidades
 
-✔ Cadastro de pacientes (CRUD)
-✔ Agendamento e reagendamento de consultas
-✔ Visualização de agenda diária e semanal
-✔ Gerenciamento de eventos
-✔ Captação de leads via formulário
-✔ Envio de notificações via WhatsApp (Twilio)
+ Cadastro de pacientes (CRUD)
+ Agendamento e reagendamento de consultas
+ Visualização de agenda diária e semanal
+ Gerenciamento de eventos
+ Captação de leads via formulário
+ Envio de notificações via WhatsApp (Twilio)
 
   Tecnologias utilizadas
   
