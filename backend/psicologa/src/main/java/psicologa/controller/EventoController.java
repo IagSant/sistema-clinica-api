@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/eventos")
+@RequestMapping("/api/eventos")
 @CrossOrigin
 public class EventoController {
 
@@ -22,7 +22,7 @@ public class EventoController {
     @Autowired
     private ConsultaRepository consultaRepository;
 
-    @GetMapping
+    @GetMapping(produces = "application/json")
     public List<Evento> listar() {
         return repository.findAll();
     }
@@ -35,16 +35,29 @@ public class EventoController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Não é possível criar evento no passado");
         }
 
-        // CONFLITO COM OUTRO EVENTO (INTERVALO)
-        if (repository.existsByInicioLessThanAndFimGreaterThan(evento.getFim(), evento.getInicio())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Já existe um evento nesse intervalo!");
-        }
-
         // CONFLITO COM CONSULTA
         if (consultaRepository.existsByDataHoraBetween(evento.getInicio(), evento.getFim())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Já existe uma consulta nesse intervalo!");
         }
 
         return repository.save(evento);
+    }
+
+    @PutMapping("/{id}")
+    public Evento atualizar(@PathVariable Long id, @RequestBody Evento novo) {
+
+        Evento evento = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        evento.setDescricao(novo.getDescricao());
+        evento.setInicio(novo.getInicio());
+        evento.setFim(novo.getFim());
+
+        return repository.save(evento);
+    }
+
+    @DeleteMapping("/grupo/{grupoId}")
+    public void deletarGrupo(@PathVariable Long grupoId) {
+        repository.deleteByGrupoId(grupoId);
     }
 }

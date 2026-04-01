@@ -287,6 +287,41 @@
         .fc-timegrid-axis {
             font-size: 12px;
         }
+
+        .calendar-cell {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-cell:hover {
+            background-color: #eef5ea;
+        }
+
+        .calendar-cell:hover::after {
+            content: "+";
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            font-weight: bold;
+            color: #809671;
+        }
+
+        .fc-timegrid-slot:hover {
+            background-color: #eef5ea !important;
+            cursor: pointer;
+        }
+
+        .fc-event {
+            border-radius: 8px !important;
+            padding: 2px;
+            font-size: 12px;
+            transition: transform 0.2s ease;
+        }
+
+        .fc-event:hover {
+            transform: scale(1.03);
+        }
     </style>
 </head>
 
@@ -357,8 +392,7 @@
             <p id="modal-telefone"></p>
             <p id="modal-data"></p>
 
-            <!-- 🔥 NOVO CAMPO -->
-            <textarea id="modal-observacao" placeholder="Observações..." style="
+            <textarea id="modal-titulo" placeholder="Descricao do evento" style="
                 width:100%;
                 margin-top:10px;
                 padding:8px;
@@ -366,7 +400,30 @@
                 border:1px solid #ccc;">
             </textarea>
 
-            <button onclick="salvarEdicao()">Salvar</button>
+
+            <select id="repeticao" style="
+                width:100%;
+                margin-top:10px;
+                padding:8px;
+                border-radius:6px;
+                border:1px solid #ccc;
+            ">
+                <option value="">Não repetir</option>
+                <option value="semanal">Semanal</option>
+                <option value="quinzenal">Quinzenal</option>
+                <option value="mensal">Mensal</option>
+            </select>
+
+            <div id="dias-semana" style="margin-top:10px; display:none;">
+                <label><input type="checkbox" value="1"> Seg</label>
+                <label><input type="checkbox" value="2"> Ter</label>
+                <label><input type="checkbox" value="3"> Qua</label>
+                <label><input type="checkbox" value="4"> Qui</label>
+                <label><input type="checkbox" value="5"> Sex</label>
+            </div>
+
+            <button onclick="salvar()">Salvar</button>
+
 
             <button onclick="desmarcar()">Desmarcar</button>
             <button onclick="reagendar()">Reagendar</button>
@@ -380,7 +437,7 @@
                 <label>Nova hora</label>
                 <select id="novaHora"></select>
 
-                <button onclick="salvarReagendamento()">Salvar novo horário</button>
+                <button onclick="salvar()">Salvar</button>
             </div>
 
 
@@ -422,9 +479,9 @@
                 const formatado = formatarData(data);
 
                 titulo.innerHTML = `
-            <div>${formatado.diaSemana}</div>
-            <div>${formatado.dataFormatada}</div>
-        `;
+                    <div>${formatado.diaSemana}</div>
+                    <div>${formatado.dataFormatada}</div>
+                `;
 
                 lista.innerHTML = "";
 
@@ -466,57 +523,137 @@
                 slotMaxTime: "24:00:00",
                 allDaySlot: false,
 
-                dayHeaderContent: function (arg) {
-                    const data = new Date(arg.date);
-                    return data.toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit'
-                    });
-                },
+                dateClick: function (info) {
 
-                // 🔥 EVENTOS (COM DADOS EXTRAS)
+                    const dataObj = new Date(info.date);
+
+                    const dataFormatada = dataObj.toLocaleDateString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric"
+                    });
+
+                    const horaFormatada = dataObj.toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    });
+
+                    document.getElementById("modal-data").innerText =
+                        `${dataFormatada} às ${horaFormatada}`;
+
+                    document.getElementById("modal-nome").innerText = "Novo Evento";
+
+                    document.getElementById("modal-consulta").classList.add("show");
+
+                    // salva a data selecionada
+                    window.novaDataSelecionada = info.date;
+
+                    // define correto
+                    window.modo = "evento";
+
+                    document.getElementById("modal-titulo").value = "";
+                    document.getElementById("repeticao").value = "";
+
+                    const diasBox = document.getElementById("dias-semana");
+                    if (diasBox) diasBox.style.display = "none";
+
+                    const checkboxes = document.querySelectorAll("#dias-semana input");
+                    checkboxes.forEach(cb => cb.checked = false);
+                    setTimeout(() => {
+                        const repeticao = document.getElementById("repeticao");
+                        const dias = document.getElementById("dias-semana");
+
+                        if (repeticao && dias) {
+                            repeticao.onchange = function () {
+                                dias.style.display = this.value === "semanal" ? "block" : "none";
+                            };
+                        }
+                    }, 100);
+                },
+                // EVENTOS (COM DADOS EXTRAS)
                 events: async function (fetchInfo, successCallback) {
 
-                    const response = await fetch("http://localhost:8080/api/consultas");
-                    const consultas = await response.json();
+                    const resConsultas = await fetch("http://localhost:8080/api/consultas");
+                    const consultas = await resConsultas.json();
 
-                    let eventos = consultas.map(c => {
+                    const resEventos = await fetch("http://localhost:8080/api/eventos");
+                    const eventosApi = await resEventos.json();
 
-                        return {
+                    let eventos = [];
+
+                    // CONSULTAS
+                    consultas.forEach(c => {
+                        eventos.push({
                             title: "Consulta com " + (c.paciente?.nome || "Paciente"),
                             start: c.dataHora,
-
                             color:
                                 c.status === "CONFIRMADO" ? "#2ecc71" :
                                     c.status === "PENDENTE" ? "#f39c12" :
                                         "#e74c3c",
-
-                            // 🔥 DADOS PARA O MODAL
                             extendedProps: {
                                 id: c.id,
+                                tipo: "consulta",
                                 nome: c.paciente?.nome,
                                 telefone: c.paciente?.telefone,
-                                observacao: c.observacao // 🔥 ADICIONA ISSO
+                                observacao: c.observacao
                             }
-                        };
+                        });
+                    });
 
+                    // EVENTOS
+                    eventosApi.forEach(e => {
+                        eventos.push({
+                            id: e.id,
+                            title: e.descricao,
+                            start: new Date(e.inicio),
+                            end: new Date(e.fim),
+                            color: "#3498db", // 🔵 azul
+                            extendedProps: {
+                                tipo: "evento",
+                                grupoId: e.grupoId
+                            }
+                        });
                     });
 
                     successCallback(eventos);
                 },
 
-                // 🔥 CLIQUE NO EVENTO
+                // CLIQUE NO EVENTO
                 eventClick: async function (info) {
 
                     const evento = info.event;
 
-                    // 🔥 BUSCA DADOS ATUALIZADOS DO BACKEND
+                    // EVENTO
+                    if (evento.extendedProps.tipo === "evento") {
+
+                        document.getElementById("modal-nome").innerText = "Evento";
+
+                        document.getElementById("modal-telefone").innerText = "";
+
+                        document.getElementById("modal-data").innerText =
+                            new Date(evento.start).toLocaleString("pt-BR");
+
+                        document.getElementById("modal-titulo").value =
+                            evento.title;
+
+                        window.modo = "evento";
+                        window.novaDataSelecionada = evento.start;
+
+                        window.eventoAtual = evento.id;
+
+                        // 🔥 ESSA LINHA QUE FALTAVA
+                        window.grupoIdAtual = evento.extendedProps.grupoId;
+
+                        document.getElementById("modal-consulta").classList.add("show");
+
+                        return;
+                    }
+
+                    // CONSULTA
                     const response = await fetch("http://localhost:8080/api/consultas");
                     const consultas = await response.json();
 
-                    const consultaAtualizada = consultas.find(c => c.id === evento.extendedProps.id);
-
-                    const consulta = consultaAtualizada;
+                    const consulta = consultas.find(c => c.id === evento.extendedProps.id);
 
                     document.getElementById("modal-nome").innerText =
                         "Paciente: " + (consulta.paciente?.nome || "Sem nome");
@@ -527,15 +664,15 @@
                     document.getElementById("modal-data").innerText =
                         "Data: " + new Date(consulta.dataHora).toLocaleString("pt-BR");
 
-                    document.getElementById("modal-observacao").value =
+                    document.getElementById("modal-titulo").value =
                         consulta.observacao || "";
 
                     window.consultaAtual = consulta.id;
 
+                    window.modo = "consulta";
+
                     document.getElementById("modal-consulta").classList.add("show");
                 }
-
-
             });
 
             calendar.render();
@@ -662,14 +799,6 @@
             document.getElementById("reagendamento-box").style.display = "none";
         }
 
-        async function desmarcar() {
-            await fetch(`http://localhost:8080/api/consultas/${window.consultaAtual}`, {
-                method: "DELETE"
-            });
-
-            fecharModal();
-            location.reload();
-        }
         function reagendar() {
 
             const box = document.getElementById("reagendamento-box")
@@ -690,7 +819,7 @@
 
         async function salvarEdicao() {
 
-            const observacao = document.getElementById("modal-observacao").value
+            const observacao = document.getElementById("modal-titulo").value;
 
             await fetch(`http://localhost:8080/api/consultas/${window.consultaAtual}`, {
                 method: "PUT",
@@ -700,10 +829,10 @@
                 body: JSON.stringify({
                     observacao: observacao
                 })
-            })
+            });
 
-            alert("Observação salva!")
-            fecharModal()
+            alert("Observação salva!");
+            fecharModal();
         }
 
         async function salvarReagendamento() {
@@ -783,6 +912,180 @@
                 select.appendChild(opcao2)
             }
         }
+
+        async function salvar() {
+
+            const grupoId = Date.now();
+
+            if (window.modo === "evento") {
+
+                const titulo = document.getElementById("modal-titulo").value;
+                const repeticao = document.getElementById("repeticao").value;
+
+                const inicioBase = new Date(window.novaDataSelecionada);
+
+                const checkboxes = document.querySelectorAll("#dias-semana input:checked");
+                let diasSelecionados = [];
+
+                checkboxes.forEach(cb => {
+                    diasSelecionados.push(parseInt(cb.value));
+                });
+
+                const limite = new Date(inicioBase);
+                limite.setMonth(limite.getMonth() + 3);
+
+                let eventosParaCriar = [];
+
+                if (!repeticao) {
+                    eventosParaCriar.push(inicioBase);
+                }
+
+                if (repeticao === "semanal") {
+
+                    let data = new Date(inicioBase);
+
+                    while (data <= limite) {
+
+                        diasSelecionados.forEach(dia => {
+
+                            let nova = new Date(data);
+
+                            let diff = dia - nova.getDay();
+                            if (diff < 0) diff += 7;
+
+                            nova.setDate(nova.getDate() + diff);
+
+                            if (nova <= limite) {
+                                eventosParaCriar.push(new Date(nova));
+                            }
+                        });
+
+                        data.setDate(data.getDate() + 7);
+                    }
+                }
+
+                if (repeticao === "quinzenal") {
+
+                    let data = new Date(inicioBase);
+                    const diaSemanaOriginal = inicioBase.getDay();
+
+                    while (data <= limite) {
+
+                        let nova = new Date(data);
+
+                        // garante mesmo dia da semana
+                        let diff = diaSemanaOriginal - nova.getDay();
+                        nova.setDate(nova.getDate() + diff);
+
+                        if (nova <= limite) {
+                            eventosParaCriar.push(new Date(nova));
+                        }
+
+                        // avança 14 dias exatos
+                        data.setDate(data.getDate() + 14);
+                    }
+                }
+
+                if (repeticao === "mensal") {
+
+                    let data = new Date(inicioBase);
+
+                    while (data <= limite) {
+
+                        let nova = new Date(data);
+
+                        // garante mesma hora original
+                        nova.setHours(inicioBase.getHours());
+                        nova.setMinutes(inicioBase.getMinutes());
+
+                        if (nova <= limite) {
+                            eventosParaCriar.push(new Date(nova));
+                        }
+
+                        // avança 1 mês SEM quebrar data
+                        data = new Date(
+                            data.getFullYear(),
+                            data.getMonth() + 1,
+                            inicioBase.getDate(),
+                            inicioBase.getHours(),
+                            inicioBase.getMinutes()
+                        );
+                    }
+                }
+                for (let data of eventosParaCriar) {
+
+                    const inicio = new Date(data);
+                    const fim = new Date(inicio.getTime() + 60 * 60 * 1000);
+
+                    await fetch("http://localhost:8080/api/eventos", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            descricao: titulo,
+                            inicio: inicio.toISOString(),
+                            fim: fim.toISOString(),
+                            grupoId: grupoId
+                        })
+                    });
+                }
+
+                alert("Evento(s) criado(s)!");
+
+                fecharModal();
+                window.calendar.refetchEvents();
+
+                window.eventoAtual = null;
+
+            } else {
+
+                await salvarEdicao();
+                window.calendar.refetchEvents();
+            }
+        }
+
+
+        async function desmarcar() {
+
+            const confirmar = confirm("Deseja remover todos da série?\nOK = todos | Cancelar = apenas este");
+
+            console.log("grupoIdAtual:", window.grupoIdAtual);
+
+            // TODOS DA SÉRIE
+            if (confirmar === true && window.grupoIdAtual != null) {
+
+                await fetch(`http://localhost:8080/api/eventos/grupo/${window.grupoIdAtual}`, {
+                    method: "DELETE"
+                });
+
+                alert("Eventos da série removidos!");
+            }
+
+            // APENAS UM EVENTO
+            else if (window.modo === "evento" && window.eventoAtual) {
+
+                await fetch(`http://localhost:8080/api/eventos/${window.eventoAtual}`, {
+                    method: "DELETE"
+                });
+
+                alert("Evento removido!");
+            }
+
+            // CONSULTA
+            else if (window.modo === "consulta") {
+
+                await fetch(`http://localhost:8080/api/consultas/${window.consultaAtual}`, {
+                    method: "DELETE"
+                });
+
+                alert("Consulta removida!");
+            }
+
+            fecharModal();
+            window.calendar.refetchEvents();
+        }
+
     </script>
 
 </body>

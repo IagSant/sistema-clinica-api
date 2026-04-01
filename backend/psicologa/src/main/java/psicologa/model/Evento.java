@@ -44,4 +44,14 @@ public class Evento {
     public void setDescricao(String descricao) {
         this.descricao = descricao;
     }
+
+    private Long grupoId;
+
+    public Long getGrupoId() {
+        return grupoId;
+    }
+
+    public void setGrupoId(Long grupoId) {
+        this.grupoId = grupoId;
+    }
 }
