@@ -322,6 +322,35 @@
         .fc-event:hover {
             transform: scale(1.03);
         }
+
+        #dias-semana {
+            display: none;
+            margin-top: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        #dias-semana.show {
+            display: grid;
+        }
+
+        #dias-semana label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        #dias-semana label:hover {
+            background: #e9ecef;
+        }
+
+        #dias-semana input {
+            width: auto;
+        }
     </style>
 </head>
 
@@ -368,8 +397,10 @@
 
         <!-- DIREITA -->
         <div class="sidebar-right">
-            <div id="dataSelecionada">Selecione um dia</div>
-            <div id="listaEventos"></div>
+            <div id="painel-dia">
+                <h3 id="dataHoje"></h3>
+                <div id="listaEventos"></div>
+            </div>
         </div>
 
     </div>
@@ -455,7 +486,7 @@
             const calendarEl = document.getElementById('calendar');
             const miniEl = document.getElementById('miniCalendar');
 
-            const titulo = document.getElementById("dataSelecionada");
+            const titulo = document.getElementById("dataHoje");
             const lista = document.getElementById("listaEventos");
 
             function formatarData(data) {
@@ -555,20 +586,13 @@
                     document.getElementById("repeticao").value = "";
 
                     const diasBox = document.getElementById("dias-semana");
-                    if (diasBox) diasBox.style.display = "none";
+                    if (diasBox) diasBox.classList.remove("show");
+
+                    const repeticao = document.getElementById("repeticao");
 
                     const checkboxes = document.querySelectorAll("#dias-semana input");
                     checkboxes.forEach(cb => cb.checked = false);
-                    setTimeout(() => {
-                        const repeticao = document.getElementById("repeticao");
-                        const dias = document.getElementById("dias-semana");
 
-                        if (repeticao && dias) {
-                            repeticao.onchange = function () {
-                                dias.style.display = this.value === "semanal" ? "block" : "none";
-                            };
-                        }
-                    }, 100);
                 },
                 // EVENTOS (COM DADOS EXTRAS)
                 events: async function (fetchInfo, successCallback) {
@@ -583,21 +607,22 @@
 
                     // CONSULTAS
                     consultas.forEach(c => {
+
+                        const inicio = new Date(c.dataHora);
+                        const fim = new Date(inicio.getTime() + 60 * 60 * 1000);
+
                         eventos.push({
-                            title: "Consulta com " + (c.paciente?.nome || "Paciente"),
-                            start: c.dataHora,
-                            color:
-                                c.status === "CONFIRMADO" ? "#2ecc71" :
-                                    c.status === "PENDENTE" ? "#f39c12" :
-                                        "#e74c3c",
+                            id: c.id,
+                            title: c.paciente?.nome || "Paciente",
+                            start: inicio,
+                            end: fim,
+                            color: "#2ecc71",
                             extendedProps: {
-                                id: c.id,
                                 tipo: "consulta",
-                                nome: c.paciente?.nome,
-                                telefone: c.paciente?.telefone,
-                                observacao: c.observacao
+                                id: c.id
                             }
                         });
+
                     });
 
                     // EVENTOS
@@ -607,7 +632,7 @@
                             title: e.descricao,
                             start: new Date(e.inicio),
                             end: new Date(e.fim),
-                            color: "#3498db", // 🔵 azul
+                            color: "#3498db",
                             extendedProps: {
                                 tipo: "evento",
                                 grupoId: e.grupoId
@@ -641,7 +666,7 @@
 
                         window.eventoAtual = evento.id;
 
-                        // 🔥 ESSA LINHA QUE FALTAVA
+                        // ESSA LINHA QUE FALTAVA
                         window.grupoIdAtual = evento.extendedProps.grupoId;
 
                         document.getElementById("modal-consulta").classList.add("show");
@@ -805,11 +830,8 @@
 
             box.style.display = "block"
 
-            const hoje = new Date()
-            document.getElementById("novaData").value =
-                hoje.toISOString().split("T")[0]
+            const hoje = new Date();
 
-            gerarHorarios()
 
             document.getElementById("novaHora").value = "09:00"
         }
@@ -866,29 +888,6 @@
             }
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-
-            const inputHora = document.getElementById("novaHora")
-
-            inputHora.addEventListener("change", function () {
-
-                let valor = this.value
-                if (!valor) return
-
-                let [hora, minuto] = valor.split(":")
-                minuto = parseInt(minuto)
-
-                if (minuto < 15) minuto = "00"
-                else if (minuto < 45) minuto = "30"
-                else {
-                    minuto = "00"
-                    hora = String((parseInt(hora) + 1)).padStart(2, '0')
-                }
-
-                this.value = hora + ":" + minuto
-            })
-
-        })
 
         function gerarHorarios() {
 
@@ -1024,8 +1023,8 @@
                         },
                         body: JSON.stringify({
                             descricao: titulo,
-                            inicio: inicio.toISOString(),
-                            fim: fim.toISOString(),
+                            inicio: inicio.toLocaleString("sv-SE").replace(" ", "T"),
+                            fim: fim.toLocaleString("sv-SE").replace(" ", "T"),
                             grupoId: grupoId
                         })
                     });
@@ -1085,6 +1084,133 @@
             fecharModal();
             window.calendar.refetchEvents();
         }
+
+        function formatarDataHoje() {
+            const hoje = new Date();
+
+            return hoje.toLocaleDateString("pt-BR", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long"
+            });
+        }
+
+        document.getElementById("dataHoje").innerText = formatarDataHoje();
+
+        async function carregarEventosHoje() {
+
+            const hoje = new Date();
+
+            // CONSULTAS
+            const resConsultas = await fetch("http://localhost:8080/api/consultas");
+            const consultas = await resConsultas.json();
+
+            // EVENTOS
+            const resEventos = await fetch("http://localhost:8080/api/eventos");
+            const eventosApi = await resEventos.json();
+
+            let eventosHoje = [];
+
+            // CONSULTAS
+            consultas.forEach(c => {
+
+                const data = new Date(c.dataHora);
+
+                if (
+                    data.getDate() === hoje.getDate() &&
+                    data.getMonth() === hoje.getMonth() &&
+                    data.getFullYear() === hoje.getFullYear()
+                ) {
+                    eventosHoje.push({
+                        id: c.id,
+                        tipo: "consulta",
+                        data: data,
+                        hora: data.toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        }),
+                        titulo: "Consulta com " + (c.paciente?.nome || "Paciente")
+                    });
+                }
+
+            });
+
+            // EVENTOS (AZUIS)
+            eventosApi.forEach(e => {
+                const data = new Date(e.inicio);
+
+                if (
+                    data.getDate() === hoje.getDate() &&
+                    data.getMonth() === hoje.getMonth() &&
+                    data.getFullYear() === hoje.getFullYear()
+                ) {
+                    eventosHoje.push({
+                        id: e.id,
+                        tipo: "evento",
+                        data: data,
+                        hora: data.toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        }),
+                        titulo: e.descricao
+                    });
+                }
+            });
+
+            console.log("EVENTOS HOJE:", eventosHoje);
+
+            renderizarEventos(eventosHoje);
+        }
+        function renderizarEventos(eventos) {
+            const lista = document.getElementById("listaEventos");
+            lista.innerHTML = "";
+
+            if (eventos.length === 0) {
+                lista.innerHTML = "<p>Nenhum compromisso hoje</p>";
+                return;
+            }
+
+            eventos.forEach(e => {
+
+                const card = document.createElement("div");
+
+                card.style.background = "#3b82f6";
+                card.style.color = "white";
+                card.style.padding = "10px";
+                card.style.marginBottom = "10px";
+                card.style.borderRadius = "8px";
+                card.style.cursor = "pointer";
+
+                card.onclick = () => {
+
+                    const evento = window.calendar.getEventById(e.id);
+
+                    if (evento) {
+                        evento.setProp("backgroundColor", "#f59e0b"); // destaque opcional
+
+                        // DISPARA O MESMO CLICK DO CALENDÁRIO
+                        window.calendar.trigger("eventClick", {
+                            event: evento,
+                            el: null,
+                            jsEvent: null
+                        });
+                    }
+
+                };
+
+                card.innerHTML = `
+                    <div style="font-size:14px; opacity:0.8">${e.hora}</div>
+                    <div style="font-weight:600">${e.titulo}</div>
+                `;
+
+                lista.appendChild(card);
+            });
+        }
+        document.addEventListener("DOMContentLoaded", () => {
+            carregarEventosHoje();
+        });
+
+
 
     </script>
 

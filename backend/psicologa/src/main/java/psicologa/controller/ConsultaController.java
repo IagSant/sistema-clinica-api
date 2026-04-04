@@ -3,10 +3,14 @@ package psicologa.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
 import psicologa.model.Consulta;
 import psicologa.repository.ConsultaRepository;
 import psicologa.model.Paciente;
 import psicologa.repository.PacienteRepository;
+import psicologa.service.ConsultaService;
+import psicologa.dto.DadosAgendamentoDTO;
 
 import java.util.List;
 
@@ -20,6 +24,9 @@ public class ConsultaController {
 
     @Autowired
     private PacienteRepository pacienteRepository;
+
+    @Autowired
+    private ConsultaService consultaService; // 👈 FALTAVA ISSO
 
     // 🔥 SALVAR CONSULTA
     @PostMapping("/salvar-consulta")
@@ -51,23 +58,20 @@ public class ConsultaController {
         return consultaRepository.findAll();
     }
 
-    // ATUALIZAR OBSERVAÇÃO (CORRIGIDO)
+    // ATUALIZAR
     @PutMapping("/consultas/{id}")
     public Consulta atualizar(@PathVariable Long id, @RequestBody Consulta dados) {
 
         Consulta consulta = consultaRepository.findById(id).orElseThrow();
 
-        // 🔥 ATUALIZA STATUS
         if (dados.getStatus() != null) {
             consulta.setStatus(dados.getStatus());
         }
 
-        // 🔥 ATUALIZA OBSERVAÇÃO
         if (dados.getObservacao() != null) {
             consulta.setObservacao(dados.getObservacao());
         }
 
-        // 🔥 ATUALIZA DATA (caso use)
         if (dados.getDataHora() != null) {
             consulta.setDataHora(dados.getDataHora());
         }
@@ -79,5 +83,19 @@ public class ConsultaController {
     @DeleteMapping("/consultas/{id}")
     public void deletar(@PathVariable Long id) {
         consultaRepository.deleteById(id);
+    }
+
+    // 🔥 AGENDAMENTO RECORRENTE
+    @PostMapping("/agendar-recorrente")
+    public ResponseEntity<?> agendarRecorrente(@RequestBody DadosAgendamentoDTO dados) {
+        return ResponseEntity.ok(
+                consultaService.agendarRecorrente(
+                        dados.getPacienteId(),
+                        dados.getData(),
+                        dados.getHora(),
+                        dados.getRepeticao(),
+                        dados.getDiasSemana()
+                )
+        );
     }
 }

@@ -3,6 +3,7 @@ package psicologa.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Entity
 @Table(name = "consulta")
@@ -10,15 +11,16 @@ public class Consulta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // ✅ ID correto
+    private Long id;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime dataHora;
 
     private boolean lembreteEnviado = false;
 
     private String status;
 
-    private String observacao; // ✅ campo normal
+    private String observacao;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "paciente_id")

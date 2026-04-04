@@ -2,6 +2,7 @@ package psicologa.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Entity
 public class Evento {
@@ -10,10 +11,15 @@ public class Evento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime inicio;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fim;
 
     private String descricao;
+
+    private Long grupoId;
 
     // GETTERS E SETTERS
 
@@ -44,8 +50,6 @@ public class Evento {
     public void setDescricao(String descricao) {
         this.descricao = descricao;
     }
-
-    private Long grupoId;
 
     public Long getGrupoId() {
         return grupoId;

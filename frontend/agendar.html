@@ -112,6 +112,32 @@
         color: red;
         font-weight: bold;
     }
+
+    .dias-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .dias-container label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #f8f9fa;
+        padding: 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .dias-container label:hover {
+        background: #e9ecef;
+    }
+
+    .dias-container input {
+        width: auto;
+    }
 </style>
 
 
@@ -148,7 +174,23 @@
             <label>Hora</label>
             <select id="hora" required></select>
 
-            <button type="submit">Agendar</button>
+            <label>Repetição</label>
+            <select id="repeticao">
+                <option value="nenhum">Nenhum</option>
+                <option value="semanal">Semanal</option>
+                <option value="quinzenal">Quinzenal</option>
+                <option value="mensal">Mensal</option>
+            </select>
+
+            <div id="diasSemana" class="dias-container">
+                <label><input type="checkbox" value="1"> Seg</label>
+                <label><input type="checkbox" value="2"> Ter</label>
+                <label><input type="checkbox" value="3"> Qua</label>
+                <label><input type="checkbox" value="4"> Qui</label>
+                <label><input type="checkbox" value="5"> Sex</label>
+            </div>
+
+            <button type="button" onclick="agendar()">Agendar</button>
 
             <div id="mensagem"></div>
 
@@ -207,43 +249,7 @@
 
 
         // SUBMIT
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault()
 
-            const pacienteId = input.dataset.id
-            const data = document.getElementById("data").value
-            const hora = document.getElementById("hora").value
-
-            const dataHora = data + "T" + hora + ":00"
-
-            if (!pacienteId) {
-                mensagem.innerHTML = "<p class='erro'>Selecione um paciente da lista.</p>"
-                return
-            }
-
-            try {
-                const res = await fetch("http://localhost:8080/api/salvar-consulta", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: new URLSearchParams({
-                        pacienteId: pacienteId,
-                        dataHora: dataHora
-                    })
-                })
-
-                if (res.ok) {
-                    mensagem.innerHTML = "<p class='sucesso'>Consulta agendada com sucesso!</p>"
-                    form.reset()
-                } else {
-                    mensagem.innerHTML = "<p class='erro'>Erro ao agendar.</p>"
-                }
-
-            } catch (err) {
-                mensagem.innerHTML = "<p class='erro'>Erro de conexão com servidor.</p>"
-            }
-        })
 
         function gerarHorarios() {
             const select = document.getElementById("hora")
@@ -267,6 +273,93 @@
 
         // chama quando carregar a página
         gerarHorarios()
+
+        function getDiasSelecionados() { // pegar os dias selecionados
+            const checkboxes = document.querySelectorAll('#diasSemana input:checked');
+            return Array.from(checkboxes).map(cb => parseInt(cb.value));
+        }
+
+        const dados = {
+            pacienteId: 1,
+            psicologoId: 2,
+            data: "2026-04-10",
+            hora: "14:00",
+            repeticao: document.getElementById("repeticao").value,
+            diasSemana: getDiasSelecionados()
+        };
+
+        async function agendar() {
+
+            const pacienteId = document.getElementById("nomePaciente").dataset.id;
+
+            const data = document.getElementById("data").value;
+            const hora = document.getElementById("hora").value;
+            const repeticao = document.getElementById("repeticao").value;
+
+            const dias = [];
+            document.querySelectorAll("#diasSemana input:checked")
+                .forEach(cb => dias.push(parseInt(cb.value)));
+
+            if (!pacienteId) {
+                alert("Selecione um paciente!");
+                return;
+            }
+
+            if (repeticao !== "nenhum" && dias.length === 0) {
+                alert("Selecione pelo menos um dia da semana!");
+                return;
+            }
+
+            const dados = {
+                pacienteId: pacienteId,
+                data: data,
+                hora: hora,
+                repeticao: repeticao,
+                diasSemana: dias
+            };
+
+            console.log(dados);
+
+            await fetch("http://localhost:8080/api/agendar-recorrente", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(dados)
+            });
+
+            alert("Agendado com sucesso 🚀");
+        }
+
+        const repeticaoSelect = document.getElementById("repeticao");
+        const diasDiv = document.getElementById("diasSemana");
+
+        repeticaoSelect.addEventListener("change", () => {
+            if (repeticaoSelect.value === "nenhum") {
+                diasDiv.style.display = "none";
+            } else {
+                diasDiv.style.display = "block";
+            }
+        });
+
+        // iniciar escondido
+        diasDiv.style.display = "none";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     </script>
 
