@@ -305,7 +305,10 @@
                 return;
             }
 
-            if (repeticao !== "nenhum" && dias.length === 0) {
+            if (
+                (repeticao === "semanal" || repeticao === "quinzenal") &&
+                dias.length === 0
+            ) {
                 alert("Selecione pelo menos um dia da semana!");
                 return;
             }
@@ -335,11 +338,16 @@
         const diasDiv = document.getElementById("diasSemana");
 
         repeticaoSelect.addEventListener("change", () => {
-            if (repeticaoSelect.value === "nenhum") {
-                diasDiv.style.display = "none";
-            } else {
+
+            if (
+                repeticaoSelect.value === "semanal" ||
+                repeticaoSelect.value === "quinzenal"
+            ) {
                 diasDiv.style.display = "block";
+            } else {
+                diasDiv.style.display = "none";
             }
+
         });
 
         // iniciar escondido

@@ -25,7 +25,7 @@ public class AgendaController {
     @GetMapping("/dia")
     public List<Map<String, Object>> agendaDia(@RequestParam String data) {
 
-        LocalDate dia = OffsetDateTime.parse(data).toLocalDate();
+        LocalDate dia = LocalDate.parse(data);
 
         LocalDateTime inicio = dia.atStartOfDay();
         LocalDateTime fim = dia.atTime(23, 59, 59);
@@ -63,7 +63,7 @@ public class AgendaController {
     @GetMapping("/semana")
     public Map<String, List<Map<String, Object>>> agendaSemana(@RequestParam String data) {
 
-        LocalDate dia = OffsetDateTime.parse(data).toLocalDate();
+        LocalDate dia = LocalDate.parse(data);
 
         LocalDate inicioSemana = dia.with(DayOfWeek.SUNDAY);
 
@@ -112,7 +112,7 @@ public class AgendaController {
     @GetMapping("/disponivel")
     public List<String> horariosDisponiveis(@RequestParam String data) {
 
-        LocalDate dia = OffsetDateTime.parse(data).toLocalDate();
+        LocalDate dia = LocalDate.parse(data);
 
         LocalDateTime inicioDia = dia.atTime(8, 0);
         LocalDateTime fimDia = dia.atTime(18, 0);

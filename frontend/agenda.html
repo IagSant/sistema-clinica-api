@@ -10,16 +10,9 @@
     <style>
         /* BOTÃO ☰ */
         #menu-btn {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            font-size: 24px;
-            background: #2c3e50;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
+            font-size: 20px;
             cursor: pointer;
-            z-index: 10000;
+            margin-right: 10px;
         }
 
         /* MENU LATERAL */
@@ -150,12 +143,16 @@
             margin: 0;
             font-family: Arial;
             background: #f5f5f5;
-            overflow: hidden;
+            overflow: auto;
+            background: #eef2f7;
         }
 
         .container {
             display: flex;
-            height: 100vh;
+            min-height: calc(100vh - 60px);
+            margin-top: 20px;
+            padding: 05px;
+            gap: 5px;
         }
 
         /* ESQUERDA */
@@ -167,6 +164,9 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
+            border-radius: 12px;
+            margin-top: 10px;
+            text-align: center;
         }
 
         /* MINI CALENDÁRIO */
@@ -198,12 +198,12 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 10px;
         }
 
         #miniCalendar .fc-toolbar-title {
-            font-size: 14px !important;
-            font-weight: bold;
-            white-space: nowrap;
+            font-weight: 600;
+            font-size: 20px;
         }
 
         #miniCalendar .fc-button {
@@ -218,6 +218,7 @@
 
         #miniCalendar .fc-daygrid-day-frame {
             height: 28px !important;
+            background: #f9fafb !important;
         }
 
         /* ESCONDE DIAS DE OUTROS MESES (extra visual) */
@@ -229,18 +230,14 @@
         .main {
             flex: 1;
             padding: 10px;
+            overflow: hidden;
         }
 
         #calendar {
-            width: 100%;
-            height: calc(100vh - 20px);
             background: white;
-            border-radius: 10px;
-        }
-
-        /* REMOVE SCROLL */
-        .fc-scroller {
-            overflow: hidden !important;
+            border-radius: 14px;
+            padding: 05px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
         }
 
         /* DIREITA */
@@ -250,6 +247,9 @@
             border-left: 1px solid #ddd;
             padding: 15px;
             overflow-y: auto;
+            border-radius: 12px;
+            margin-top: 10px;
+            text-align: center;
         }
 
         /* DATA */
@@ -281,11 +281,11 @@
 
         /* HORÁRIOS */
         .fc-timegrid-slot {
-            height: 38px !important;
+            height: 24px !important;
         }
 
         .fc-timegrid-axis {
-            font-size: 12px;
+            font-size: 15px;
         }
 
         .calendar-cell {
@@ -308,27 +308,23 @@
         }
 
         .fc-timegrid-slot:hover {
-            background-color: #eef5ea !important;
+            background: #e6f0ff !important;
             cursor: pointer;
         }
 
         .fc-event {
-            border-radius: 8px !important;
+            text-align: center;
+            border-radius: 10px !important;
             padding: 2px;
-            font-size: 12px;
-            transition: transform 0.2s ease;
+            font-size: 13px;
+            border: none !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         .fc-event:hover {
             transform: scale(1.03);
         }
 
-        #dias-semana {
-            display: none;
-            margin-top: 10px;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
 
         #dias-semana.show {
             display: grid;
@@ -351,10 +347,42 @@
         #dias-semana input {
             width: auto;
         }
+
+        #dias-semana {
+            display: none;
+            margin-top: 10px;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #dias-semana.show {
+            display: flex;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #2f3e4d;
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 9998;
+        }
     </style>
 </head>
 
 <body>
+
+    <div class="header">
+        <span id="menu-btn">☰</span>
+        <span style="margin-left: 10px;">Agenda</span>
+    </div>
     <!-- BOTÃO MENU -->
     <div id="menu-btn">☰</div>
 
@@ -445,7 +473,7 @@
                 <option value="mensal">Mensal</option>
             </select>
 
-            <div id="dias-semana" style="margin-top:10px; display:none;">
+            <div id="dias-semana" style="margin-top:10px;">
                 <label><input type="checkbox" value="1"> Seg</label>
                 <label><input type="checkbox" value="2"> Ter</label>
                 <label><input type="checkbox" value="3"> Qua</label>
@@ -507,23 +535,37 @@
                 const response = await fetch(`http://localhost:8080/agenda/dia?data=${data}`);
                 const eventos = await response.json();
 
-                const formatado = formatarData(data);
+                const titulo = document.getElementById("dataHoje");
+                const lista = document.getElementById("listaEventos");
+
+                const d = new Date(data);
 
                 titulo.innerHTML = `
-                    <div>${formatado.diaSemana}</div>
-                    <div>${formatado.dataFormatada}</div>
-                `;
+        <div>${d.toLocaleDateString('pt-BR', { weekday: 'long' })}</div>
+        <div>${d.toLocaleDateString('pt-BR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                })}</div>
+    `;
 
                 lista.innerHTML = "";
 
-                if (eventos.length === 0) {
+                if (!eventos || eventos.length === 0) {
                     lista.innerHTML = "<p>Nenhum compromisso</p>";
                     return;
                 }
 
+                // ORDENA
+                eventos.sort((a, b) =>
+                    new Date(a.inicio || a.dataHora) - new Date(b.inicio || b.dataHora)
+                );
+
                 eventos.forEach(e => {
 
-                    const horario = new Date(e.horario).toLocaleTimeString('pt-BR', {
+                    const dataEvento = new Date(e.horario);
+
+                    const hora = dataEvento.toLocaleTimeString('pt-BR', {
                         hour: '2-digit',
                         minute: '2-digit'
                     });
@@ -531,7 +573,16 @@
                     const div = document.createElement("div");
                     div.classList.add("evento");
 
-                    div.innerHTML = `<strong>${horario}</strong><br>${e.descricao}`;
+                    if (e.tipo === "consulta") {
+                        div.style.background = "#2ecc71"; // verde
+                    } else {
+                        div.style.background = "#3498db"; // azul
+                    }
+
+                    div.style.color = "#fff";
+
+                    div.innerHTML = `<strong>${hora}</strong><br>${e.descricao || "Sem descrição"}`;
+
                     lista.appendChild(div);
                 });
             }
@@ -542,7 +593,7 @@
                 locale: 'pt-br',
 
                 height: '100%',
-                expandRows: false,
+                expandRows: true,
 
                 headerToolbar: {
                     left: 'prev,next today',
@@ -555,6 +606,8 @@
                 allDaySlot: false,
 
                 dateClick: function (info) {
+
+                    carregarEventosDia(info.dateStr);
 
                     const dataObj = new Date(info.date);
 
@@ -589,6 +642,20 @@
                     if (diasBox) diasBox.classList.remove("show");
 
                     const repeticao = document.getElementById("repeticao");
+
+                    const dias = document.getElementById("dias-semana");
+
+                    repeticao.onchange = function () {
+
+                        console.log("mudou:", this.value);
+
+                        if (this.value === "semanal" || this.value === "quinzenal") {
+                            dias.classList.add("show");
+                        } else {
+                            dias.classList.remove("show");
+                        }
+
+                    };
 
                     const checkboxes = document.querySelectorAll("#dias-semana input");
                     checkboxes.forEach(cb => cb.checked = false);
@@ -666,10 +733,23 @@
 
                         window.eventoAtual = evento.id;
 
-                        // ESSA LINHA QUE FALTAVA
                         window.grupoIdAtual = evento.extendedProps.grupoId;
 
                         document.getElementById("modal-consulta").classList.add("show");
+
+
+                        const repeticao = document.getElementById("repeticao");
+                        const dias = document.getElementById("dias-semana");
+
+                        repeticao.onchange = function () {
+                            console.log("mudou:", this.value);
+
+                            if (this.value === "semanal" || this.value === "quinzenal") {
+                                dias.classList.add("show");
+                            } else {
+                                dias.classList.remove("show");
+                            }
+                        };
 
                         return;
                     }
@@ -702,6 +782,8 @@
 
             calendar.render();
             window.calendar = calendar;
+            const hoje = new Date().toISOString().split("T")[0];
+            carregarEventosDia(hoje);
 
             setInterval(() => {
                 calendar.refetchEvents();
@@ -711,7 +793,7 @@
             const miniCalendar = new FullCalendar.Calendar(miniEl, {
                 initialView: 'dayGridMonth',
                 locale: 'pt-br',
-                height: 220,
+                height: "auto",
 
                 headerToolbar: {
                     left: 'prev,next',
@@ -1095,120 +1177,9 @@
             });
         }
 
-        document.getElementById("dataHoje").innerText = formatarDataHoje();
 
-        async function carregarEventosHoje() {
 
-            const hoje = new Date();
 
-            // CONSULTAS
-            const resConsultas = await fetch("http://localhost:8080/api/consultas");
-            const consultas = await resConsultas.json();
-
-            // EVENTOS
-            const resEventos = await fetch("http://localhost:8080/api/eventos");
-            const eventosApi = await resEventos.json();
-
-            let eventosHoje = [];
-
-            // CONSULTAS
-            consultas.forEach(c => {
-
-                const data = new Date(c.dataHora);
-
-                if (
-                    data.getDate() === hoje.getDate() &&
-                    data.getMonth() === hoje.getMonth() &&
-                    data.getFullYear() === hoje.getFullYear()
-                ) {
-                    eventosHoje.push({
-                        id: c.id,
-                        tipo: "consulta",
-                        data: data,
-                        hora: data.toLocaleTimeString("pt-BR", {
-                            hour: "2-digit",
-                            minute: "2-digit"
-                        }),
-                        titulo: "Consulta com " + (c.paciente?.nome || "Paciente")
-                    });
-                }
-
-            });
-
-            // EVENTOS (AZUIS)
-            eventosApi.forEach(e => {
-                const data = new Date(e.inicio);
-
-                if (
-                    data.getDate() === hoje.getDate() &&
-                    data.getMonth() === hoje.getMonth() &&
-                    data.getFullYear() === hoje.getFullYear()
-                ) {
-                    eventosHoje.push({
-                        id: e.id,
-                        tipo: "evento",
-                        data: data,
-                        hora: data.toLocaleTimeString("pt-BR", {
-                            hour: "2-digit",
-                            minute: "2-digit"
-                        }),
-                        titulo: e.descricao
-                    });
-                }
-            });
-
-            console.log("EVENTOS HOJE:", eventosHoje);
-
-            renderizarEventos(eventosHoje);
-        }
-        function renderizarEventos(eventos) {
-            const lista = document.getElementById("listaEventos");
-            lista.innerHTML = "";
-
-            if (eventos.length === 0) {
-                lista.innerHTML = "<p>Nenhum compromisso hoje</p>";
-                return;
-            }
-
-            eventos.forEach(e => {
-
-                const card = document.createElement("div");
-
-                card.style.background = "#3b82f6";
-                card.style.color = "white";
-                card.style.padding = "10px";
-                card.style.marginBottom = "10px";
-                card.style.borderRadius = "8px";
-                card.style.cursor = "pointer";
-
-                card.onclick = () => {
-
-                    const evento = window.calendar.getEventById(e.id);
-
-                    if (evento) {
-                        evento.setProp("backgroundColor", "#f59e0b"); // destaque opcional
-
-                        // DISPARA O MESMO CLICK DO CALENDÁRIO
-                        window.calendar.trigger("eventClick", {
-                            event: evento,
-                            el: null,
-                            jsEvent: null
-                        });
-                    }
-
-                };
-
-                card.innerHTML = `
-                    <div style="font-size:14px; opacity:0.8">${e.hora}</div>
-                    <div style="font-weight:600">${e.titulo}</div>
-                `;
-
-                lista.appendChild(card);
-            });
-        }
-        document.addEventListener("DOMContentLoaded", () => {
-            carregarEventosHoje();
-        });
 
 
 
