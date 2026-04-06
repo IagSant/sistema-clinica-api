@@ -52,6 +52,20 @@
             margin: 0;
             color: #2c3e50;
         }
+
+        .btn-voltar {
+            display: inline-block;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+
+        .btn-voltar:hover {
+            background: #1a252f;
+        }
     </style>
 
 </head>
@@ -63,7 +77,7 @@
     <div class="container">
 
         <div class="topo">
-            <a href="agenda.html">← Voltar</a>
+            <a href="agenda.html" class="btn-voltar">← Voltar para Agenda</a>
 
             <select id="periodo">
                 <option value="dia">Hoje</option>
@@ -210,7 +224,7 @@
                         inicioSemana.setDate(hoje.getDate() - hoje.getDay())
 
                         const fimSemana = new Date(inicioSemana)
-                        fimSemana.setDate(inicioSemana.getDate() + 6) 
+                        fimSemana.setDate(inicioSemana.getDate() + 6)
 
                         return data >= inicioSemana && data <= fimSemana
                     }

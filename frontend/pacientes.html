@@ -95,13 +95,18 @@
         border-radius: 6px;
     }
 
-    button {
-        padding: 10px;
-        border: none;
+    .btn-voltar {
+        display: inline-block;
+        margin-bottom: 15px;
+        padding: 10px 15px;
         background: #2c3e50;
         color: white;
+        text-decoration: none;
         border-radius: 6px;
-        cursor: pointer;
+    }
+
+    .btn-voltar:hover {
+        background: #1a252f;
     }
 </style>
 
@@ -117,7 +122,7 @@
 
         <div class="topo">
 
-            <a href="agenda.html">← Voltar</a>
+            <a href="agenda.html" class="btn-voltar">← Voltar para Agenda</a>
 
             <div class="controls">
                 <input type="text" id="busca" placeholder="🔍 Buscar">

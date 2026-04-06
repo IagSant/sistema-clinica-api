@@ -24,8 +24,15 @@
 
     .container {
         padding: 20px;
+    }
+
+    .form-box {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
         max-width: 500px;
-        margin: auto;
+        margin: 0 auto;
+        /* centraliza só o form */
     }
 
     form {
@@ -74,6 +81,10 @@
         border-radius: 6px;
         border: 1px solid #ccc;
         font-size: 14px;
+    }
+
+    * {
+        box-sizing: border-box;
     }
 
     button {
@@ -152,9 +163,10 @@
 
     <div class="container">
 
+
         <a href="agenda.html" class="btn-voltar">← Voltar para Agenda</a>
 
-        <form id="formAgendar">
+        <form id="formAgendar" class="form-box">
 
             <div class="autocomplete">
 

@@ -29,12 +29,10 @@
             z-index: 9999;
         }
 
-        /* MENU ABERTO */
         #menu-lateral.show {
             left: 0;
         }
 
-        /* ITENS */
         #menu-lateral ul {
             list-style: none;
             padding: 0;
@@ -50,112 +48,85 @@
             background: #34495e;
         }
 
-        /* FUNDO ESCURO */
         .popup {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-
             background: rgba(0, 0, 0, 0.4);
-
             display: flex;
             justify-content: center;
             align-items: center;
-
             opacity: 0;
             pointer-events: none;
             transition: 0.3s;
-
             z-index: 9999;
-            /* 🔥 ESSENCIAL */
         }
 
-        /* QUANDO ABRIR */
         .popup.show {
             opacity: 1;
             pointer-events: all;
         }
 
-        /* CAIXA DO POPUP */
         .popup-content {
             background: white;
             padding: 25px;
             border-radius: 12px;
             width: 320px;
             max-width: 90%;
-
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-
             text-align: left;
             animation: aparecer 0.25s ease;
         }
 
-        /* TÍTULO */
         .popup-content h3 {
             margin-top: 0;
             color: #2c3e50;
         }
 
-        /* TEXTOS */
         .popup-content p {
             margin: 8px 0;
             color: #555;
             font-size: 14px;
         }
 
-        /* BOTÃO */
         .popup-content button {
             margin-top: 15px;
             width: 100%;
             padding: 10px;
-
             border: none;
             border-radius: 6px;
-
             background: #2c3e50;
             color: white;
-
             cursor: pointer;
             font-size: 14px;
         }
 
-        /* HOVER */
         .popup-content button:hover {
             background: #1a252f;
         }
 
-        /* ANIMAÇÃO */
         @keyframes aparecer {
-            from {
-                transform: scale(0.9);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+            from { transform: scale(0.9); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
         }
 
         body {
             margin: 0;
             font-family: Arial;
-            background: #f5f5f5;
-            overflow: auto;
             background: #eef2f7;
+            overflow: auto;
         }
 
         .container {
             display: flex;
             min-height: calc(100vh - 60px);
-            margin-top: 20px;
-            padding: 05px;
+            margin-top: 50px;
+            padding: 5px;
             gap: 5px;
         }
 
-        /* ESQUERDA */
         .sidebar-left {
             width: 260px;
             background: white;
@@ -169,7 +140,6 @@
             text-align: center;
         }
 
-        /* MINI CALENDÁRIO */
         #miniCalendar {
             margin-top: 50px;
             font-size: 12px;
@@ -193,7 +163,6 @@
             font-size: 12px;
         }
 
-        /* HEADER MINI */
         #miniCalendar .fc-toolbar {
             display: flex;
             align-items: center;
@@ -211,7 +180,6 @@
             font-size: 12px !important;
         }
 
-        /* NÃO ESTICAR */
         #miniCalendar .fc {
             height: 100% !important;
         }
@@ -221,12 +189,10 @@
             background: #f9fafb !important;
         }
 
-        /* ESCONDE DIAS DE OUTROS MESES (extra visual) */
         #miniCalendar .fc-day-other {
             display: none;
         }
 
-        /* CENTRO */
         .main {
             flex: 1;
             padding: 10px;
@@ -236,11 +202,10 @@
         #calendar {
             background: white;
             border-radius: 14px;
-            padding: 05px;
+            padding: 5px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
         }
 
-        /* DIREITA */
         .sidebar-right {
             width: 300px;
             background: white;
@@ -252,7 +217,6 @@
             text-align: center;
         }
 
-        /* DATA */
         #dataSelecionada {
             text-align: center;
             margin-bottom: 15px;
@@ -271,7 +235,6 @@
             color: #666;
         }
 
-        /* EVENTOS */
         .evento {
             background: #f1f1f1;
             padding: 10px;
@@ -279,7 +242,6 @@
             border-radius: 8px;
         }
 
-        /* HORÁRIOS */
         .fc-timegrid-slot {
             height: 24px !important;
         }
@@ -325,9 +287,15 @@
             transform: scale(1.03);
         }
 
+        #dias-semana {
+            display: none;
+            margin-top: 10px;
+            flex-direction: column;
+            gap: 10px;
+        }
 
         #dias-semana.show {
-            display: grid;
+            display: flex;
         }
 
         #dias-semana label {
@@ -348,17 +316,6 @@
             width: auto;
         }
 
-        #dias-semana {
-            display: none;
-            margin-top: 10px;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        #dias-semana.show {
-            display: flex;
-        }
-
         .header {
             position: fixed;
             top: 0;
@@ -373,18 +330,47 @@
             align-items: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             z-index: 9998;
+            box-sizing: border-box;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 12px 18px;
+            margin: 30px;
+            border-radius: 8px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: 0.3s;
+            z-index: 9999;
+            font-size: 14px;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #toast.success {
+            background: #27ae60;
+        }
+
+        #toast.error {
+            background: #e74c3c;
         }
     </style>
 </head>
 
 <body>
 
+    <!-- FIX 1: apenas um #header com o menu-btn dentro — removido o #menu-btn duplicado -->
     <div class="header">
-        <span id="menu-btn">☰</span>
-        <span style="margin-left: 10px;">Agenda</span>
+        <span id="menu-btn" style="cursor:pointer; margin-right:10px;">☰</span>
+        <span>📅 Agenda</span>
     </div>
-    <!-- BOTÃO MENU -->
-    <div id="menu-btn">☰</div>
 
     <!-- MENU LATERAL -->
     <div id="menu-lateral">
@@ -393,7 +379,7 @@
             <li onclick="irPara('pacientes.html')">Pacientes</li>
             <li onclick="irPara('agendar.html')">Agendar</li>
             <li onclick="irPara('editar.html')">Editar</li>
-            <li onclick="irPara('relatorio.html')">Relatorio</li>
+            <li onclick="irPara('relatorio.html')">Relatório</li>
         </ul>
     </div>
 
@@ -401,21 +387,13 @@
 
         <!-- ESQUERDA -->
         <div class="sidebar-left">
-
             <div style="width:100%;">
-
-                <!-- MINI CALENDÁRIO -->
                 <div id="miniCalendar"></div>
-
-                <!-- LEADS -->
                 <h4 style="margin-top:20px;">
                     Leads <span id="contador">(0)</span>
                 </h4>
-
                 <div id="lista-leads"></div>
-
             </div>
-
         </div>
 
         <!-- CENTRO -->
@@ -433,39 +411,51 @@
 
     </div>
 
+    <!-- MODAL CONFIRMAÇÃO -->
+    <div id="confirm-modal" class="popup">
+        <div class="popup-content">
+            <h3>Confirmação</h3>
+            <p>Deseja remover todos da série?</p>
+            <button onclick="confirmarAcao(true)">Sim, todos</button>
+            <button onclick="confirmarAcao(false)">Apenas este</button>
+            <button onclick="fecharConfirm()">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- MODAL LEAD -->
     <div id="lead-popup" class="popup">
         <div class="popup-content">
             <h3 id="lead-nome"></h3>
             <p id="lead-telefone"></p>
             <p id="lead-email"></p>
             <p id="lead-mensagem"></p>
-
             <button onclick="fecharPopup()">Fechar</button>
         </div>
     </div>
 
+    <!-- MODAL CONSULTA/EVENTO -->
     <div id="modal-consulta" class="popup">
         <div class="popup-content">
-
             <h3 id="modal-nome"></h3>
             <p id="modal-telefone"></p>
             <p id="modal-data"></p>
 
-            <textarea id="modal-titulo" placeholder="Descricao do evento" style="
-                width:100%;
-                margin-top:10px;
-                padding:8px;
-                border-radius:6px;
-                border:1px solid #ccc;">
-            </textarea>
-
+            <textarea id="modal-titulo" placeholder="Descrição do evento" style="
+                width: 100%;
+                margin-top: 10px;
+                padding: 8px;
+                border-radius: 6px;
+                border: 1px solid #ccc;
+                box-sizing: border-box;
+            "></textarea>
 
             <select id="repeticao" style="
-                width:100%;
-                margin-top:10px;
-                padding:8px;
-                border-radius:6px;
-                border:1px solid #ccc;
+                width: 100%;
+                margin-top: 10px;
+                padding: 8px;
+                border-radius: 6px;
+                border: 1px solid #ccc;
+                box-sizing: border-box;
             ">
                 <option value="">Não repetir</option>
                 <option value="semanal">Semanal</option>
@@ -482,72 +472,47 @@
             </div>
 
             <button onclick="salvar()">Salvar</button>
-
-
             <button onclick="desmarcar()">Desmarcar</button>
             <button onclick="reagendar()">Reagendar</button>
-
             <button onclick="fecharModal()">Fechar</button>
 
             <div id="reagendamento-box" style="display:none; margin-top:10px;">
                 <label>Nova data</label>
-                <input type="date" id="novaData">
-
-                <label>Nova hora</label>
-                <select id="novaHora"></select>
-
-                <button onclick="salvar()">Salvar</button>
+                <input type="date" id="novaData" style="width:100%; padding:6px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+                <label style="margin-top:8px; display:block;">Nova hora</label>
+                <select id="novaHora" style="width:100%; padding:6px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;"></select>
+                <button onclick="salvarReagendamento()" style="margin-top:10px;">Confirmar Reagendamento</button>
             </div>
-
-
         </div>
     </div>
 
+    <div id="toast"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
     <script>
 
+        // FIX 2: URL base do backend em variável única — troque aqui quando subir para produção
+        const API_BASE = "http://localhost:8080";
 
         document.addEventListener('DOMContentLoaded', function () {
 
-            const calendarEl = document.getElementById('calendar');
-            const miniEl = document.getElementById('miniCalendar');
-
-            const titulo = document.getElementById("dataHoje");
-            const lista = document.getElementById("listaEventos");
-
-            function formatarData(data) {
-                const d = new Date(data);
-
-                return {
-                    diaSemana: d.toLocaleDateString('pt-BR', { weekday: 'long' }),
-                    dataFormatada: d.toLocaleDateString('pt-BR', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                    })
-                };
-            }
+            const calendarEl  = document.getElementById('calendar');
+            const miniEl      = document.getElementById('miniCalendar');
+            const titulo      = document.getElementById("dataHoje");
+            const lista       = document.getElementById("listaEventos");
 
             async function carregarEventosDia(data) {
 
-                const response = await fetch(`http://localhost:8080/agenda/dia?data=${data}`);
-                const eventos = await response.json();
-
-                const titulo = document.getElementById("dataHoje");
-                const lista = document.getElementById("listaEventos");
+                const response = await fetch(`${API_BASE}/agenda/dia?data=${data}`);
+                const eventos  = await response.json();
 
                 const d = new Date(data);
 
                 titulo.innerHTML = `
-        <div>${d.toLocaleDateString('pt-BR', { weekday: 'long' })}</div>
-        <div>${d.toLocaleDateString('pt-BR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                })}</div>
-    `;
+                    <div>${d.toLocaleDateString('pt-BR', { weekday: 'long' })}</div>
+                    <div>${d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                `;
 
                 lista.innerHTML = "";
 
@@ -556,33 +521,19 @@
                     return;
                 }
 
-                // ORDENA
                 eventos.sort((a, b) =>
                     new Date(a.inicio || a.dataHora) - new Date(b.inicio || b.dataHora)
                 );
 
                 eventos.forEach(e => {
-
                     const dataEvento = new Date(e.horario);
-
-                    const hora = dataEvento.toLocaleTimeString('pt-BR', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
+                    const hora = dataEvento.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
                     const div = document.createElement("div");
                     div.classList.add("evento");
-
-                    if (e.tipo === "consulta") {
-                        div.style.background = "#2ecc71"; // verde
-                    } else {
-                        div.style.background = "#3498db"; // azul
-                    }
-
+                    div.style.background = e.tipo === "consulta" ? "#2ecc71" : "#3498db";
                     div.style.color = "#fff";
-
                     div.innerHTML = `<strong>${hora}</strong><br>${e.descricao || "Sem descrição"}`;
-
                     lista.appendChild(div);
                 });
             }
@@ -591,7 +542,6 @@
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'timeGridWeek',
                 locale: 'pt-br',
-
                 height: '100%',
                 expandRows: true,
 
@@ -611,88 +561,61 @@
 
                     const dataObj = new Date(info.date);
 
-                    const dataFormatada = dataObj.toLocaleDateString("pt-BR", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric"
-                    });
-
-                    const horaFormatada = dataObj.toLocaleTimeString("pt-BR", {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                    });
-
                     document.getElementById("modal-data").innerText =
-                        `${dataFormatada} às ${horaFormatada}`;
+                        `${dataObj.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })} às ${dataObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
 
-                    document.getElementById("modal-nome").innerText = "Novo Evento";
-
+                    document.getElementById("modal-nome").innerText    = "Novo Evento";
+                    document.getElementById("modal-telefone").innerText = "";
                     document.getElementById("modal-consulta").classList.add("show");
 
-                    // salva a data selecionada
                     window.novaDataSelecionada = info.date;
-
-                    // define correto
                     window.modo = "evento";
+                    window.eventoAtual = null;
+                    window.grupoIdAtual = null;
 
-                    document.getElementById("modal-titulo").value = "";
-                    document.getElementById("repeticao").value = "";
+                    document.getElementById("modal-titulo").value  = "";
+                    document.getElementById("repeticao").value     = "";
+                    document.getElementById("dias-semana").classList.remove("show");
 
-                    const diasBox = document.getElementById("dias-semana");
-                    if (diasBox) diasBox.classList.remove("show");
+                    const checkboxes = document.querySelectorAll("#dias-semana input");
+                    checkboxes.forEach(cb => cb.checked = false);
 
-                    const repeticao = document.getElementById("repeticao");
-
-                    const dias = document.getElementById("dias-semana");
-
-                    repeticao.onchange = function () {
-
-                        console.log("mudou:", this.value);
-
+                    // FIX 3: registrar onchange apenas uma vez via listener declarado aqui
+                    document.getElementById("repeticao").onchange = function () {
+                        const dias = document.getElementById("dias-semana");
                         if (this.value === "semanal" || this.value === "quinzenal") {
                             dias.classList.add("show");
                         } else {
                             dias.classList.remove("show");
                         }
-
                     };
-
-                    const checkboxes = document.querySelectorAll("#dias-semana input");
-                    checkboxes.forEach(cb => cb.checked = false);
-
                 },
-                // EVENTOS (COM DADOS EXTRAS)
+
                 events: async function (fetchInfo, successCallback) {
 
-                    const resConsultas = await fetch("http://localhost:8080/api/consultas");
-                    const consultas = await resConsultas.json();
+                    const [resConsultas, resEventos] = await Promise.all([
+                        fetch(`${API_BASE}/api/consultas`),
+                        fetch(`${API_BASE}/api/eventos`)
+                    ]);
 
-                    const resEventos = await fetch("http://localhost:8080/api/eventos");
-                    const eventosApi = await resEventos.json();
+                    const consultas   = await resConsultas.json();
+                    const eventosApi  = await resEventos.json();
 
                     let eventos = [];
 
-                    // CONSULTAS
                     consultas.forEach(c => {
-
                         const inicio = new Date(c.dataHora);
-                        const fim = new Date(inicio.getTime() + 60 * 60 * 1000);
-
+                        const fim    = new Date(inicio.getTime() + 60 * 60 * 1000);
                         eventos.push({
                             id: c.id,
                             title: c.paciente?.nome || "Paciente",
                             start: inicio,
                             end: fim,
                             color: "#2ecc71",
-                            extendedProps: {
-                                tipo: "consulta",
-                                id: c.id
-                            }
+                            extendedProps: { tipo: "consulta", id: c.id }
                         });
-
                     });
 
-                    // EVENTOS
                     eventosApi.forEach(e => {
                         eventos.push({
                             id: e.id,
@@ -700,50 +623,33 @@
                             start: new Date(e.inicio),
                             end: new Date(e.fim),
                             color: "#3498db",
-                            extendedProps: {
-                                tipo: "evento",
-                                grupoId: e.grupoId
-                            }
+                            extendedProps: { tipo: "evento", grupoId: e.grupoId }
                         });
                     });
 
                     successCallback(eventos);
                 },
 
-                // CLIQUE NO EVENTO
                 eventClick: async function (info) {
 
                     const evento = info.event;
 
-                    // EVENTO
                     if (evento.extendedProps.tipo === "evento") {
 
-                        document.getElementById("modal-nome").innerText = "Evento";
-
+                        document.getElementById("modal-nome").innerText     = "Evento";
                         document.getElementById("modal-telefone").innerText = "";
+                        document.getElementById("modal-data").innerText     = new Date(evento.start).toLocaleString("pt-BR");
+                        document.getElementById("modal-titulo").value       = evento.title;
 
-                        document.getElementById("modal-data").innerText =
-                            new Date(evento.start).toLocaleString("pt-BR");
-
-                        document.getElementById("modal-titulo").value =
-                            evento.title;
-
-                        window.modo = "evento";
+                        window.modo               = "evento";
                         window.novaDataSelecionada = evento.start;
-
-                        window.eventoAtual = evento.id;
-
-                        window.grupoIdAtual = evento.extendedProps.grupoId;
+                        window.eventoAtual        = evento.id;
+                        window.grupoIdAtual       = evento.extendedProps.grupoId;
 
                         document.getElementById("modal-consulta").classList.add("show");
 
-
-                        const repeticao = document.getElementById("repeticao");
-                        const dias = document.getElementById("dias-semana");
-
-                        repeticao.onchange = function () {
-                            console.log("mudou:", this.value);
-
+                        document.getElementById("repeticao").onchange = function () {
+                            const dias = document.getElementById("dias-semana");
                             if (this.value === "semanal" || this.value === "quinzenal") {
                                 dias.classList.add("show");
                             } else {
@@ -755,26 +661,17 @@
                     }
 
                     // CONSULTA
-                    const response = await fetch("http://localhost:8080/api/consultas");
+                    const response  = await fetch(`${API_BASE}/api/consultas`);
                     const consultas = await response.json();
+                    const consulta  = consultas.find(c => c.id === evento.extendedProps.id);
 
-                    const consulta = consultas.find(c => c.id === evento.extendedProps.id);
-
-                    document.getElementById("modal-nome").innerText =
-                        "Paciente: " + (consulta.paciente?.nome || "Sem nome");
-
-                    document.getElementById("modal-telefone").innerText =
-                        "Telefone: " + (consulta.paciente?.telefone || "-");
-
-                    document.getElementById("modal-data").innerText =
-                        "Data: " + new Date(consulta.dataHora).toLocaleString("pt-BR");
-
-                    document.getElementById("modal-titulo").value =
-                        consulta.observacao || "";
+                    document.getElementById("modal-nome").innerText     = "Paciente: " + (consulta.paciente?.nome || "Sem nome");
+                    document.getElementById("modal-telefone").innerText = "Telefone: " + (consulta.paciente?.telefone || "-");
+                    document.getElementById("modal-data").innerText     = "Data: " + new Date(consulta.dataHora).toLocaleString("pt-BR");
+                    document.getElementById("modal-titulo").value       = consulta.observacao || "";
 
                     window.consultaAtual = consulta.id;
-
-                    window.modo = "consulta";
+                    window.modo          = "consulta";
 
                     document.getElementById("modal-consulta").classList.add("show");
                 }
@@ -782,28 +679,20 @@
 
             calendar.render();
             window.calendar = calendar;
+
             const hoje = new Date().toISOString().split("T")[0];
             carregarEventosDia(hoje);
 
-            setInterval(() => {
-                calendar.refetchEvents();
-            }, 10000);
+            setInterval(() => calendar.refetchEvents(), 10000);
 
-            // MINI CALENDÁRIO FINAL
+            // MINI CALENDÁRIO
             const miniCalendar = new FullCalendar.Calendar(miniEl, {
                 initialView: 'dayGridMonth',
                 locale: 'pt-br',
                 height: "auto",
-
-                headerToolbar: {
-                    left: 'prev,next',
-                    center: 'title',
-                    right: ''
-                },
-
+                headerToolbar: { left: 'prev,next', center: 'title', right: '' },
                 showNonCurrentDates: false,
                 fixedWeekCount: false,
-
                 dateClick: function (info) {
                     calendar.gotoDate(info.dateStr);
                     carregarEventosDia(info.dateStr);
@@ -812,185 +701,121 @@
 
             miniCalendar.render();
 
+            // LEADS
             let leads = [];
 
-            function adicionarLead(nome) {
-                leads.push(nome);
-                atualizarLeads();
-            }
-
-            function irPara(pagina) {
-                window.location.href = pagina
-            }
-
-
-
             function atualizarLeads() {
+                const listaEl   = document.getElementById("lista-leads");
+                const contador  = document.getElementById("contador");
 
-                const lista = document.getElementById("lista-leads");
-                const contador = document.getElementById("contador");
-                const contadorTopo = document.getElementById("contador-topo"); // 🔥 NOVO
-
-                lista.innerHTML = "";
+                listaEl.innerHTML = "";
 
                 leads.forEach(lead => {
-
-                    const div = document.createElement("div");
-
-                    div.innerText = lead.nome;
-
+                    const div       = document.createElement("div");
+                    div.innerText   = lead.nome;
                     div.style.cursor = "pointer";
-
                     div.onclick = () => {
-
-                        document.getElementById("lead-nome").innerText = lead.nome;
+                        document.getElementById("lead-nome").innerText     = lead.nome;
                         document.getElementById("lead-telefone").innerText = "Telefone: " + lead.telefone;
-                        document.getElementById("lead-email").innerText = "Email: " + lead.email;
+                        document.getElementById("lead-email").innerText    = "Email: " + lead.email;
                         document.getElementById("lead-mensagem").innerText = "Mensagem: " + lead.mensagem;
-
                         document.getElementById("lead-popup").classList.add("show");
                     };
-
-                    lista.appendChild(div);
+                    listaEl.appendChild(div);
                 });
 
-                const total = leads.length;
-
-                document.title = total > 0
-                    ? "Agenda Profissional (" + total + ")"
-                    : "Agenda Profissional";
-
-                contador.innerText = "(" + total + ")";
-                if (contadorTopo) {
-                    contadorTopo.innerText = "(" + total + ")";
-                }
+                const total  = leads.length;
+                document.title = total > 0 ? `Agenda Profissional (${total})` : "Agenda Profissional";
+                contador.innerText = `(${total})`;
             }
 
             function carregarLeads() {
-
-                fetch("http://localhost:8080/api/leads")
+                fetch(`${API_BASE}/api/leads`)
                     .then(res => res.json())
                     .then(data => {
-
-                        leads = data; // 🔥 substitui lista fake
-
+                        leads = data;
                         atualizarLeads();
                     });
             }
 
-
-
             carregarLeads();
             setInterval(carregarLeads, 5000);
-
         });
+
+        // ─── FUNÇÕES GLOBAIS ───
+
+        // FIX 4: irPara declarada apenas uma vez
+        function irPara(pagina) {
+            window.location.href = pagina;
+        }
 
         function fecharPopup() {
             document.getElementById("lead-popup").classList.remove("show");
         }
 
-        const menuBtn = document.getElementById("menu-btn")
-        const menu = document.getElementById("menu-lateral")
-
-        menuBtn.addEventListener("click", () => {
-            menu.classList.toggle("show")
-        })
-
-        function irPara(pagina) {
-            window.location.href = pagina;
-        }
-
         function fecharModal() {
             document.getElementById("modal-consulta").classList.remove("show");
-
             document.getElementById("reagendamento-box").style.display = "none";
         }
 
+        // FIX 5: reagendar() agora chama gerarHorarios() corretamente
         function reagendar() {
-
-            const box = document.getElementById("reagendamento-box")
-
-            box.style.display = "block"
-
-            const hoje = new Date();
-
-
-            document.getElementById("novaHora").value = "09:00"
+            const box = document.getElementById("reagendamento-box");
+            box.style.display = "block";
+            gerarHorarios();
         }
-        function editar() {
-            alert("Aqui você pode editar observações");
+
+        function gerarHorarios() {
+            const select  = document.getElementById("novaHora");
+            select.innerHTML = "";
+
+            for (let h = 8; h <= 23; h++) {
+                const hora = String(h).padStart(2, "0");
+
+                const op1   = document.createElement("option");
+                op1.value   = `${hora}:00`;
+                op1.text    = `${hora}:00`;
+
+                const op2   = document.createElement("option");
+                op2.value   = `${hora}:30`;
+                op2.text    = `${hora}:30`;
+
+                select.appendChild(op1);
+                select.appendChild(op2);
+            }
         }
 
         async function salvarEdicao() {
-
             const observacao = document.getElementById("modal-titulo").value;
 
-            await fetch(`http://localhost:8080/api/consultas/${window.consultaAtual}`, {
+            await fetch(`${API_BASE}/api/consultas/${window.consultaAtual}`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    observacao: observacao
-                })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ observacao })
             });
 
-            alert("Observação salva!");
+            mostrarToast("Observação salva!", "success");
             fecharModal();
         }
 
         async function salvarReagendamento() {
+            const novaData    = document.getElementById("novaData").value;
+            const novaHora    = document.getElementById("novaHora").value;
+            const novaDataHora = `${novaData}T${novaHora}:00`;
 
-            const novaData = document.getElementById("novaData").value
-            const novaHora = document.getElementById("novaHora").value
-
-            const novaDataHora = novaData + "T" + novaHora + ":00"
-
-            const res = await fetch(`http://localhost:8080/api/consultas/${window.consultaAtual}`, {
+            const res = await fetch(`${API_BASE}/api/consultas/${window.consultaAtual}`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    dataHora: novaDataHora
-                })
-            })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ dataHora: novaDataHora })
+            });
 
             if (res.ok) {
-
-                alert("Reagendado!")
-
-                fecharModal()
-
-                // atualiza eventos do calendário
-                window.calendar.refetchEvents()
-
+                // FIX 6: typo "successo" corrigido para "success"
+                mostrarToast("Reagendado!", "success");
+                fecharModal();
+                window.calendar.refetchEvents();
             } else {
-                alert("Erro ao reagendar")
-            }
-        }
-
-
-        function gerarHorarios() {
-
-            const select = document.getElementById("novaHora")
-
-            select.innerHTML = ""
-
-            for (let h = 8; h <= 23; h++) {
-
-                const hora = String(h).padStart(2, "0")
-
-                const opcao1 = document.createElement("option")
-                opcao1.value = `${hora}:00`
-                opcao1.text = `${hora}:00`
-
-                const opcao2 = document.createElement("option")
-                opcao2.value = `${hora}:30`
-                opcao2.text = `${hora}:30`
-
-                select.appendChild(opcao1)
-                select.appendChild(opcao2)
+                mostrarToast("Erro ao reagendar", "error");
             }
         }
 
@@ -1000,17 +825,12 @@
 
             if (window.modo === "evento") {
 
-                const titulo = document.getElementById("modal-titulo").value;
-                const repeticao = document.getElementById("repeticao").value;
+                const titulo      = document.getElementById("modal-titulo").value;
+                const repeticao   = document.getElementById("repeticao").value;
+                const inicioBase  = new Date(window.novaDataSelecionada);
 
-                const inicioBase = new Date(window.novaDataSelecionada);
-
-                const checkboxes = document.querySelectorAll("#dias-semana input:checked");
-                let diasSelecionados = [];
-
-                checkboxes.forEach(cb => {
-                    diasSelecionados.push(parseInt(cb.value));
-                });
+                const checkboxes      = document.querySelectorAll("#dias-semana input:checked");
+                const diasSelecionados = Array.from(checkboxes).map(cb => parseInt(cb.value));
 
                 const limite = new Date(inicioBase);
                 limite.setMonth(limite.getMonth() + 3);
@@ -1018,72 +838,29 @@
                 let eventosParaCriar = [];
 
                 if (!repeticao) {
-                    eventosParaCriar.push(inicioBase);
+                    eventosParaCriar.push(new Date(inicioBase));
                 }
 
-                if (repeticao === "semanal") {
-
+                if (repeticao === "semanal" || repeticao === "quinzenal") {
+                    const intervalo = repeticao === "quinzenal" ? 14 : 7;
                     let data = new Date(inicioBase);
 
                     while (data <= limite) {
-
                         diasSelecionados.forEach(dia => {
-
                             let nova = new Date(data);
-
                             let diff = dia - nova.getDay();
                             if (diff < 0) diff += 7;
-
                             nova.setDate(nova.getDate() + diff);
-
-                            if (nova <= limite) {
-                                eventosParaCriar.push(new Date(nova));
-                            }
+                            if (nova <= limite) eventosParaCriar.push(new Date(nova));
                         });
-
-                        data.setDate(data.getDate() + 7);
-                    }
-                }
-
-                if (repeticao === "quinzenal") {
-
-                    let data = new Date(inicioBase);
-                    const diaSemanaOriginal = inicioBase.getDay();
-
-                    while (data <= limite) {
-
-                        let nova = new Date(data);
-
-                        // garante mesmo dia da semana
-                        let diff = diaSemanaOriginal - nova.getDay();
-                        nova.setDate(nova.getDate() + diff);
-
-                        if (nova <= limite) {
-                            eventosParaCriar.push(new Date(nova));
-                        }
-
-                        // avança 14 dias exatos
-                        data.setDate(data.getDate() + 14);
+                        data.setDate(data.getDate() + intervalo);
                     }
                 }
 
                 if (repeticao === "mensal") {
-
                     let data = new Date(inicioBase);
-
                     while (data <= limite) {
-
-                        let nova = new Date(data);
-
-                        // garante mesma hora original
-                        nova.setHours(inicioBase.getHours());
-                        nova.setMinutes(inicioBase.getMinutes());
-
-                        if (nova <= limite) {
-                            eventosParaCriar.push(new Date(nova));
-                        }
-
-                        // avança 1 mês SEM quebrar data
+                        eventosParaCriar.push(new Date(data));
                         data = new Date(
                             data.getFullYear(),
                             data.getMonth() + 1,
@@ -1093,98 +870,85 @@
                         );
                     }
                 }
+
                 for (let data of eventosParaCriar) {
-
                     const inicio = new Date(data);
-                    const fim = new Date(inicio.getTime() + 60 * 60 * 1000);
+                    const fim    = new Date(inicio.getTime() + 60 * 60 * 1000);
 
-                    await fetch("http://localhost:8080/api/eventos", {
+                    await fetch(`${API_BASE}/api/eventos`, {
                         method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
+                        headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
                             descricao: titulo,
                             inicio: inicio.toLocaleString("sv-SE").replace(" ", "T"),
                             fim: fim.toLocaleString("sv-SE").replace(" ", "T"),
-                            grupoId: grupoId
+                            grupoId
                         })
                     });
                 }
 
-                alert("Evento(s) criado(s)!");
-
+                mostrarToast("Evento(s) criado(s)!", "success");
                 fecharModal();
                 window.calendar.refetchEvents();
-
                 window.eventoAtual = null;
 
             } else {
-
                 await salvarEdicao();
                 window.calendar.refetchEvents();
             }
         }
 
-
         async function desmarcar() {
+            const confirmar = await abrirConfirm();
+            if (confirmar === null) return;
 
-            const confirmar = confirm("Deseja remover todos da série?\nOK = todos | Cancelar = apenas este");
-
-            console.log("grupoIdAtual:", window.grupoIdAtual);
-
-            // TODOS DA SÉRIE
             if (confirmar === true && window.grupoIdAtual != null) {
-
-                await fetch(`http://localhost:8080/api/eventos/grupo/${window.grupoIdAtual}`, {
-                    method: "DELETE"
-                });
-
-                alert("Eventos da série removidos!");
-            }
-
-            // APENAS UM EVENTO
-            else if (window.modo === "evento" && window.eventoAtual) {
-
-                await fetch(`http://localhost:8080/api/eventos/${window.eventoAtual}`, {
-                    method: "DELETE"
-                });
-
-                alert("Evento removido!");
-            }
-
-            // CONSULTA
-            else if (window.modo === "consulta") {
-
-                await fetch(`http://localhost:8080/api/consultas/${window.consultaAtual}`, {
-                    method: "DELETE"
-                });
-
-                alert("Consulta removida!");
+                await fetch(`${API_BASE}/api/eventos/grupo/${window.grupoIdAtual}`, { method: "DELETE" });
+                mostrarToast("Eventos da série removidos!", "success");
+            } else if (confirmar === false && window.eventoAtual) {
+                await fetch(`${API_BASE}/api/eventos/${window.eventoAtual}`, { method: "DELETE" });
+                mostrarToast("Evento removido!", "success");
+            } else if (window.modo === "consulta") {
+                await fetch(`${API_BASE}/api/consultas/${window.consultaAtual}`, { method: "DELETE" });
+                mostrarToast("Atendimento removido!", "success");
             }
 
             fecharModal();
             window.calendar.refetchEvents();
         }
 
-        function formatarDataHoje() {
-            const hoje = new Date();
-
-            return hoje.toLocaleDateString("pt-BR", {
-                weekday: "long",
-                day: "2-digit",
-                month: "long"
-            });
+        function mostrarToast(mensagem, tipo = "success") {
+            const toast     = document.getElementById("toast");
+            toast.innerText = mensagem;
+            toast.className = `show ${tipo}`;
+            setTimeout(() => { toast.className = ""; }, 3000);
         }
 
+        let respostaConfirmacao = null;
 
+        function abrirConfirm() {
+            document.getElementById("modal-consulta").classList.remove("show");
+            document.getElementById("confirm-modal").classList.add("show");
+            return new Promise(resolve => { respostaConfirmacao = resolve; });
+        }
 
+        function confirmarAcao(valor) {
+            document.getElementById("confirm-modal").classList.remove("show");
+            respostaConfirmacao(valor);
+        }
 
+        function fecharConfirm() {
+            document.getElementById("confirm-modal").classList.remove("show");
+            document.getElementById("modal-consulta").classList.add("show");
+            respostaConfirmacao(null);
+        }
 
-
+        // Menu lateral — listener único
+        document.getElementById("menu-btn").addEventListener("click", () => {
+            document.getElementById("menu-lateral").classList.toggle("show");
+        });
 
     </script>
 
 </body>
-
 </html>
