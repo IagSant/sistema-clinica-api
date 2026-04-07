@@ -8,14 +8,14 @@
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
 
     <style>
-        /* BOTÃO ☰ */
         #menu-btn {
+            position: relative;
             font-size: 20px;
             cursor: pointer;
             margin-right: 10px;
+            z-index: 10001;
         }
 
-        /* MENU LATERAL */
         #menu-lateral {
             position: fixed;
             top: 0;
@@ -92,7 +92,7 @@
         }
 
         .popup-content button {
-            margin-top: 15px;
+            margin-top: 10px;
             width: 100%;
             padding: 10px;
             border: none;
@@ -107,9 +107,28 @@
             background: #1a252f;
         }
 
+        /* Badge de repetição no modal */
+        #badge-repeticao {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
         @keyframes aparecer {
-            from { transform: scale(0.9); opacity: 0; }
-            to   { transform: scale(1);   opacity: 1; }
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         body {
@@ -117,6 +136,7 @@
             font-family: Arial;
             background: #eef2f7;
             overflow: auto;
+            font-family: 'Segoe UI', 'Inter', Arial, sans-serif;
         }
 
         .container {
@@ -145,6 +165,23 @@
             font-size: 12px;
             width: 250px;
             height: 250px;
+        }
+
+        #miniCalendar .fc-daygrid-day {
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        #miniCalendar .fc-daygrid-day:hover {
+            background: #d6eaf8;
+            cursor: pointer;
+        }
+
+        .fc-day-selecionado {
+            background: #3498db !important;
+            color: white !important;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
 
         #lista-leads div {
@@ -220,8 +257,11 @@
         #dataSelecionada {
             text-align: center;
             margin-bottom: 15px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
+            padding: 15px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
 
         #dataSelecionada div:first-child {
@@ -236,10 +276,17 @@
         }
 
         .evento {
-            background: #f1f1f1;
-            padding: 10px;
+            background: white;
+            padding: 12px;
             margin-bottom: 10px;
-            border-radius: 8px;
+            border-radius: 10px;
+            border-left: 5px solid #3498db;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            transition: 0.2s;
+        }
+
+        .evento:hover {
+            transform: translateY(-2px);
         }
 
         .fc-timegrid-slot {
@@ -329,7 +376,7 @@
             display: flex;
             align-items: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            z-index: 9998;
+            z-index: 10002;
             box-sizing: border-box;
         }
 
@@ -366,13 +413,11 @@
 
 <body>
 
-    <!-- FIX 1: apenas um #header com o menu-btn dentro — removido o #menu-btn duplicado -->
     <div class="header">
         <span id="menu-btn" style="cursor:pointer; margin-right:10px;">☰</span>
         <span>📅 Agenda</span>
     </div>
 
-    <!-- MENU LATERAL -->
     <div id="menu-lateral">
         <ul>
             <li onclick="irPara('leads.html')">Leads</li>
@@ -440,6 +485,9 @@
             <p id="modal-telefone"></p>
             <p id="modal-data"></p>
 
+            <!-- Badge mostrando tipo de repetição salvo -->
+            <div id="badge-repeticao" style="display:none;"></div>
+
             <textarea id="modal-titulo" placeholder="Descrição do evento" style="
                 width: 100%;
                 margin-top: 10px;
@@ -478,9 +526,11 @@
 
             <div id="reagendamento-box" style="display:none; margin-top:10px;">
                 <label>Nova data</label>
-                <input type="date" id="novaData" style="width:100%; padding:6px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+                <input type="date" id="novaData"
+                    style="width:100%; padding:6px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
                 <label style="margin-top:8px; display:block;">Nova hora</label>
-                <select id="novaHora" style="width:100%; padding:6px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;"></select>
+                <select id="novaHora"
+                    style="width:100%; padding:6px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;"></select>
                 <button onclick="salvarReagendamento()" style="margin-top:10px;">Confirmar Reagendamento</button>
             </div>
         </div>
@@ -492,22 +542,53 @@
 
     <script>
 
-        // FIX 2: URL base do backend em variável única — troque aqui quando subir para produção
+        let dataSelecionadaGlobal = null;
+
         const API_BASE = "http://localhost:8080";
+
+        // ─── ARMAZENAMENTO LOCAL DE METADADOS DE REPETIÇÃO ───────────────────────────
+        // Chave: grupoId | Valor: { repeticao, diasSemana[] }
+        // Persiste em localStorage para sobreviver a recarregamentos de página
+        function salvarMetaGrupo(grupoId, repeticao, diasSemana) {
+            const meta = JSON.parse(localStorage.getItem("grupoMeta") || "{}");
+            meta[grupoId] = { repeticao, diasSemana };
+            localStorage.setItem("grupoMeta", JSON.stringify(meta));
+        }
+
+        function obterMetaGrupo(grupoId) {
+            const meta = JSON.parse(localStorage.getItem("grupoMeta") || "{}");
+            return meta[grupoId] || null;
+        }
+
+        function labelRepeticao(valor) {
+            const mapa = { semanal: "🔁 Semanal", quinzenal: "🔁 Quinzenal", mensal: "🔁 Mensal" };
+            return mapa[valor] || null;
+        }
+
+        // ─── CORREÇÃO DE FUSO: data local sem deslocamento UTC ───────────────────────
+        function dataLocalStr(date) {
+            // Retorna "YYYY-MM-DD" no horário LOCAL (não UTC)
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, "0");
+            const d = String(date.getDate()).padStart(2, "0");
+            return `${y}-${m}-${d}`;
+        }
 
         document.addEventListener('DOMContentLoaded', function () {
 
-            const calendarEl  = document.getElementById('calendar');
-            const miniEl      = document.getElementById('miniCalendar');
-            const titulo      = document.getElementById("dataHoje");
-            const lista       = document.getElementById("listaEventos");
+            const calendarEl = document.getElementById('calendar');
+            const miniEl = document.getElementById('miniCalendar');
+            const titulo = document.getElementById("dataHoje");
+            const lista = document.getElementById("listaEventos");
 
-            async function carregarEventosDia(data) {
+            async function carregarEventosDia(dataStr) {
+                // dataStr: "YYYY-MM-DD" (local)
+                const response = await fetch(`${API_BASE}/agenda/dia?data=${dataStr}`);
+                const eventos = await response.json();
 
-                const response = await fetch(`${API_BASE}/agenda/dia?data=${data}`);
-                const eventos  = await response.json();
-
-                const d = new Date(data);
+                // Usa Date com horário noon para evitar virada de dia por fuso
+                const partes = dataStr.split("-");
+                const d = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]), 12);
 
                 titulo.innerHTML = `
                     <div>${d.toLocaleDateString('pt-BR', { weekday: 'long' })}</div>
@@ -556,56 +637,63 @@
                 allDaySlot: false,
 
                 dateClick: function (info) {
+                    const dataObj = info.date;
+                    const dataLocal = dataLocalStr(info.date);
 
-                    carregarEventosDia(info.dateStr);
+                    calendar.gotoDate(dataLocal);
 
-                    const dataObj = new Date(info.date);
+                    // salva selecao
+                    dataSelecionadaGlobal = dataLocal;
+
+                    // atualiza mini calendário
+                    miniCalendar.gotoDate(dataLocal);
+                    miniCalendar.render();
+
+                    pintarDataSelecionada();
 
                     document.getElementById("modal-data").innerText =
-                        `${dataObj.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })} às ${dataObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+                        `${dataObj.toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric"
+                        })} às ${dataObj.toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        })}`;
 
-                    document.getElementById("modal-nome").innerText    = "Novo Evento";
+                    document.getElementById("modal-nome").innerText = "Novo Evento";
                     document.getElementById("modal-telefone").innerText = "";
                     document.getElementById("modal-consulta").classList.add("show");
+
+                    document.getElementById("badge-repeticao").style.display = "none";
 
                     window.novaDataSelecionada = info.date;
                     window.modo = "evento";
                     window.eventoAtual = null;
                     window.grupoIdAtual = null;
 
-                    document.getElementById("modal-titulo").value  = "";
-                    document.getElementById("repeticao").value     = "";
+                    document.getElementById("modal-titulo").value = "";
+                    document.getElementById("repeticao").value = "";
                     document.getElementById("dias-semana").classList.remove("show");
 
                     const checkboxes = document.querySelectorAll("#dias-semana input");
                     checkboxes.forEach(cb => cb.checked = false);
-
-                    // FIX 3: registrar onchange apenas uma vez via listener declarado aqui
-                    document.getElementById("repeticao").onchange = function () {
-                        const dias = document.getElementById("dias-semana");
-                        if (this.value === "semanal" || this.value === "quinzenal") {
-                            dias.classList.add("show");
-                        } else {
-                            dias.classList.remove("show");
-                        }
-                    };
                 },
 
                 events: async function (fetchInfo, successCallback) {
-
                     const [resConsultas, resEventos] = await Promise.all([
                         fetch(`${API_BASE}/api/consultas`),
                         fetch(`${API_BASE}/api/eventos`)
                     ]);
 
-                    const consultas   = await resConsultas.json();
-                    const eventosApi  = await resEventos.json();
+                    const consultas = await resConsultas.json();
+                    const eventosApi = await resEventos.json();
 
                     let eventos = [];
 
                     consultas.forEach(c => {
                         const inicio = new Date(c.dataHora);
-                        const fim    = new Date(inicio.getTime() + 60 * 60 * 1000);
+                        const fim = new Date(inicio.getTime() + 60 * 60 * 1000);
                         eventos.push({
                             id: c.id,
                             title: c.paciente?.nome || "Paciente",
@@ -631,20 +719,49 @@
                 },
 
                 eventClick: async function (info) {
-
                     const evento = info.event;
 
                     if (evento.extendedProps.tipo === "evento") {
-
-                        document.getElementById("modal-nome").innerText     = "Evento";
+                        document.getElementById("modal-nome").innerText = "Evento";
                         document.getElementById("modal-telefone").innerText = "";
-                        document.getElementById("modal-data").innerText     = new Date(evento.start).toLocaleString("pt-BR");
-                        document.getElementById("modal-titulo").value       = evento.title;
+                        document.getElementById("modal-data").innerText = new Date(evento.start).toLocaleString("pt-BR");
+                        document.getElementById("modal-titulo").value = evento.title;
 
-                        window.modo               = "evento";
+                        window.modo = "evento";
                         window.novaDataSelecionada = evento.start;
-                        window.eventoAtual        = evento.id;
-                        window.grupoIdAtual       = evento.extendedProps.grupoId;
+                        window.eventoAtual = evento.id;
+                        window.grupoIdAtual = evento.extendedProps.grupoId;
+
+                        // ── NOVO: mostrar badge de repetição salvo ──
+                        const badge = document.getElementById("badge-repeticao");
+                        const grupoId = evento.extendedProps.grupoId || evento.id;
+                        const meta = obterMetaGrupo(grupoId);
+
+                        console.log("DEBUG grupoId:", grupoId);
+                        console.log("DEBUG meta:", meta);
+
+                        if (meta && meta.repeticao) {
+                            badge.textContent = labelRepeticao(meta.repeticao);
+                            badge.style.display = "inline-block";
+
+                            // Preenche o select com o valor salvo
+                            document.getElementById("repeticao").value = meta.repeticao;
+
+                            // Marca os dias salvos se semanal/quinzenal
+                            if (meta.repeticao === "semanal" || meta.repeticao === "quinzenal") {
+                                document.getElementById("dias-semana").classList.add("show");
+                                const checkboxes = document.querySelectorAll("#dias-semana input");
+                                checkboxes.forEach(cb => {
+                                    cb.checked = meta.diasSemana && meta.diasSemana.includes(parseInt(cb.value));
+                                });
+                            } else {
+                                document.getElementById("dias-semana").classList.remove("show");
+                            }
+                        } else {
+                            badge.style.display = "none";
+                            document.getElementById("repeticao").value = "";
+                            document.getElementById("dias-semana").classList.remove("show");
+                        }
 
                         document.getElementById("modal-consulta").classList.add("show");
 
@@ -661,17 +778,18 @@
                     }
 
                     // CONSULTA
-                    const response  = await fetch(`${API_BASE}/api/consultas`);
+                    const response = await fetch(`${API_BASE}/api/consultas`);
                     const consultas = await response.json();
-                    const consulta  = consultas.find(c => c.id === evento.extendedProps.id);
+                    const consulta = consultas.find(c => c.id === evento.extendedProps.id);
 
-                    document.getElementById("modal-nome").innerText     = "Paciente: " + (consulta.paciente?.nome || "Sem nome");
+                    document.getElementById("modal-nome").innerText = "Paciente: " + (consulta.paciente?.nome || "Sem nome");
                     document.getElementById("modal-telefone").innerText = "Telefone: " + (consulta.paciente?.telefone || "-");
-                    document.getElementById("modal-data").innerText     = "Data: " + new Date(consulta.dataHora).toLocaleString("pt-BR");
-                    document.getElementById("modal-titulo").value       = consulta.observacao || "";
+                    document.getElementById("modal-data").innerText = "Data: " + new Date(consulta.dataHora).toLocaleString("pt-BR");
+                    document.getElementById("modal-titulo").value = consulta.observacao || "";
+                    document.getElementById("badge-repeticao").style.display = "none";
 
                     window.consultaAtual = consulta.id;
-                    window.modo          = "consulta";
+                    window.modo = "consulta";
 
                     document.getElementById("modal-consulta").classList.add("show");
                 }
@@ -680,10 +798,11 @@
             calendar.render();
             window.calendar = calendar;
 
-            const hoje = new Date().toISOString().split("T")[0];
+            // FIX FUSO: carrega o dia de hoje usando data local
+            const hoje = dataLocalStr(new Date());
             carregarEventosDia(hoje);
 
-            setInterval(() => calendar.refetchEvents(), 10000);
+            //setInterval(() => calendar.refetchEvents(), 10000);
 
             // MINI CALENDÁRIO
             const miniCalendar = new FullCalendar.Calendar(miniEl, {
@@ -693,9 +812,15 @@
                 headerToolbar: { left: 'prev,next', center: 'title', right: '' },
                 showNonCurrentDates: false,
                 fixedWeekCount: false,
+
                 dateClick: function (info) {
-                    calendar.gotoDate(info.dateStr);
-                    carregarEventosDia(info.dateStr);
+                    const dataLocal = dataLocalStr(info.date);
+
+                    dataSelecionadaGlobal = dataLocal;
+
+                    calendar.gotoDate(dataLocal);
+
+                    pintarDataSelecionada(); // 🔥 ESSA LINHA
                 }
             });
 
@@ -705,26 +830,25 @@
             let leads = [];
 
             function atualizarLeads() {
-                const listaEl   = document.getElementById("lista-leads");
-                const contador  = document.getElementById("contador");
-
+                const listaEl = document.getElementById("lista-leads");
+                const contador = document.getElementById("contador");
                 listaEl.innerHTML = "";
 
                 leads.forEach(lead => {
-                    const div       = document.createElement("div");
-                    div.innerText   = lead.nome;
+                    const div = document.createElement("div");
+                    div.innerText = lead.nome;
                     div.style.cursor = "pointer";
                     div.onclick = () => {
-                        document.getElementById("lead-nome").innerText     = lead.nome;
+                        document.getElementById("lead-nome").innerText = lead.nome;
                         document.getElementById("lead-telefone").innerText = "Telefone: " + lead.telefone;
-                        document.getElementById("lead-email").innerText    = "Email: " + lead.email;
+                        document.getElementById("lead-email").innerText = "Email: " + lead.email;
                         document.getElementById("lead-mensagem").innerText = "Mensagem: " + lead.mensagem;
                         document.getElementById("lead-popup").classList.add("show");
                     };
                     listaEl.appendChild(div);
                 });
 
-                const total  = leads.length;
+                const total = leads.length;
                 document.title = total > 0 ? `Agenda Profissional (${total})` : "Agenda Profissional";
                 contador.innerText = `(${total})`;
             }
@@ -742,12 +866,9 @@
             setInterval(carregarLeads, 5000);
         });
 
-        // ─── FUNÇÕES GLOBAIS ───
+        // ─── FUNÇÕES GLOBAIS ───────────────────────────────────────────────────────
 
-        // FIX 4: irPara declarada apenas uma vez
-        function irPara(pagina) {
-            window.location.href = pagina;
-        }
+        function irPara(pagina) { window.location.href = pagina; }
 
         function fecharPopup() {
             document.getElementById("lead-popup").classList.remove("show");
@@ -758,7 +879,6 @@
             document.getElementById("reagendamento-box").style.display = "none";
         }
 
-        // FIX 5: reagendar() agora chama gerarHorarios() corretamente
         function reagendar() {
             const box = document.getElementById("reagendamento-box");
             box.style.display = "block";
@@ -766,20 +886,14 @@
         }
 
         function gerarHorarios() {
-            const select  = document.getElementById("novaHora");
+            const select = document.getElementById("novaHora");
             select.innerHTML = "";
-
             for (let h = 8; h <= 23; h++) {
                 const hora = String(h).padStart(2, "0");
-
-                const op1   = document.createElement("option");
-                op1.value   = `${hora}:00`;
-                op1.text    = `${hora}:00`;
-
-                const op2   = document.createElement("option");
-                op2.value   = `${hora}:30`;
-                op2.text    = `${hora}:30`;
-
+                const op1 = document.createElement("option");
+                op1.value = `${hora}:00`; op1.text = `${hora}:00`;
+                const op2 = document.createElement("option");
+                op2.value = `${hora}:30`; op2.text = `${hora}:30`;
                 select.appendChild(op1);
                 select.appendChild(op2);
             }
@@ -787,20 +901,18 @@
 
         async function salvarEdicao() {
             const observacao = document.getElementById("modal-titulo").value;
-
             await fetch(`${API_BASE}/api/consultas/${window.consultaAtual}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ observacao })
             });
-
             mostrarToast("Observação salva!", "success");
             fecharModal();
         }
 
         async function salvarReagendamento() {
-            const novaData    = document.getElementById("novaData").value;
-            const novaHora    = document.getElementById("novaHora").value;
+            const novaData = document.getElementById("novaData").value;
+            const novaHora = document.getElementById("novaHora").value;
             const novaDataHora = `${novaData}T${novaHora}:00`;
 
             const res = await fetch(`${API_BASE}/api/consultas/${window.consultaAtual}`, {
@@ -810,7 +922,6 @@
             });
 
             if (res.ok) {
-                // FIX 6: typo "successo" corrigido para "success"
                 mostrarToast("Reagendado!", "success");
                 fecharModal();
                 window.calendar.refetchEvents();
@@ -820,20 +931,21 @@
         }
 
         async function salvar() {
-
-            const grupoId = Date.now();
+            const grupoId = String(window.grupoIdAtual || Date.now());
+            const meta = obterMetaGrupo(grupoId);
 
             if (window.modo === "evento") {
+                const titulo = document.getElementById("modal-titulo").value;
+                const repeticao = document.getElementById("repeticao").value;
+                const inicioBase = new Date(window.novaDataSelecionada);
 
-                const titulo      = document.getElementById("modal-titulo").value;
-                const repeticao   = document.getElementById("repeticao").value;
-                const inicioBase  = new Date(window.novaDataSelecionada);
-
-                const checkboxes      = document.querySelectorAll("#dias-semana input:checked");
-                const diasSelecionados = Array.from(checkboxes).map(cb => parseInt(cb.value));
+                const checkboxes = document.querySelectorAll("#dias-semana input:checked");
+                const diasSelecionados = Array.from(checkboxes)
+                    .map(cb => parseInt(cb.value))
+                    .sort((a, b) => a - b);
 
                 const limite = new Date(inicioBase);
-                limite.setMonth(limite.getMonth() + 3);
+                limite.setFullYear(limite.getFullYear() + 1);
 
                 let eventosParaCriar = [];
 
@@ -842,18 +954,49 @@
                 }
 
                 if (repeticao === "semanal" || repeticao === "quinzenal") {
-                    const intervalo = repeticao === "quinzenal" ? 14 : 7;
+                    const intervaloSemanas = repeticao === "quinzenal" ? 2 : 1;
+
                     let data = new Date(inicioBase);
+                    data.setDate(data.getDate() - data.getDay());
+
+                    let semanaBase = new Date(inicioBase);
+                    semanaBase.setHours(0, 0, 0, 0);
+
+                    let semanaIndex = 0;
 
                     while (data <= limite) {
-                        diasSelecionados.forEach(dia => {
-                            let nova = new Date(data);
-                            let diff = dia - nova.getDay();
-                            if (diff < 0) diff += 7;
-                            nova.setDate(nova.getDate() + diff);
-                            if (nova <= limite) eventosParaCriar.push(new Date(nova));
-                        });
-                        data.setDate(data.getDate() + intervalo);
+
+                        const diffSemanas = Math.floor(
+                            (data - semanaBase) / (7 * 24 * 60 * 60 * 1000)
+                        );
+
+                        if (diffSemanas % intervaloSemanas === 0) {
+
+                            diasSelecionados.forEach(dia => {
+                                let nova = new Date(data);
+
+                                const diaAtual = nova.getDay();
+                                const ajuste = dia - diaAtual;
+
+                                nova.setDate(nova.getDate() + ajuste);
+
+                                nova.setHours(inicioBase.getHours());
+                                nova.setMinutes(inicioBase.getMinutes());
+
+                                if (nova >= inicioBase && nova <= limite) {
+
+                                    const jaExiste = eventosParaCriar.some(e =>
+                                        e.getTime() === nova.getTime()
+                                    );
+
+                                    if (!jaExiste) {
+                                        eventosParaCriar.push(new Date(nova));
+                                    }
+                                }
+                            });
+                        }
+
+                        data.setDate(data.getDate() + 7);
                     }
                 }
 
@@ -871,20 +1014,34 @@
                     }
                 }
 
-                for (let data of eventosParaCriar) {
-                    const inicio = new Date(data);
-                    const fim    = new Date(inicio.getTime() + 60 * 60 * 1000);
+                const respostas = await Promise.all(
+                    eventosParaCriar.map(data => {
+                        const inicio = new Date(data);
+                        const fim = new Date(inicio.getTime() + 60 * 60 * 1000);
 
-                    await fetch(`${API_BASE}/api/eventos`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            descricao: titulo,
-                            inicio: inicio.toLocaleString("sv-SE").replace(" ", "T"),
-                            fim: fim.toLocaleString("sv-SE").replace(" ", "T"),
-                            grupoId
-                        })
-                    });
+                        return fetch(`${API_BASE}/api/eventos`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                descricao: titulo,
+                                inicio: inicio.toLocaleString("sv-SE").replace(" ", "T"),
+                                fim: fim.toLocaleString("sv-SE").replace(" ", "T"),
+                                grupoId
+                            })
+                        });
+                    })
+                );
+
+                const erro = respostas.find(r => !r.ok);
+
+                if (erro) {
+                    mostrarToast("Erro ao salvar alguns eventos", "error");
+                    return;
+                }
+
+                // ── NOVO: salvar metadados de repetição localmente ──
+                if (repeticao) {
+                    salvarMetaGrupo(grupoId, repeticao, diasSelecionados);
                 }
 
                 mostrarToast("Evento(s) criado(s)!", "success");
@@ -918,7 +1075,7 @@
         }
 
         function mostrarToast(mensagem, tipo = "success") {
-            const toast     = document.getElementById("toast");
+            const toast = document.getElementById("toast");
             toast.innerText = mensagem;
             toast.className = `show ${tipo}`;
             setTimeout(() => { toast.className = ""; }, 3000);
@@ -943,12 +1100,28 @@
             respostaConfirmacao(null);
         }
 
-        // Menu lateral — listener único
+        function pintarDataSelecionada() {
+            // limpa anterior
+            document.querySelectorAll("#miniCalendar .fc-daygrid-day")
+                .forEach(el => el.classList.remove("fc-day-selecionado"));
+
+            const dia = document.querySelector(
+                `#miniCalendar [data-date="${dataSelecionadaGlobal}"]`
+            );
+
+            if (dia) {
+                dia.classList.add("fc-day-selecionado");
+            }
+        }
+
         document.getElementById("menu-btn").addEventListener("click", () => {
             document.getElementById("menu-lateral").classList.toggle("show");
         });
 
+
+
     </script>
 
 </body>
+
 </html>
