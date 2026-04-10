@@ -1059,15 +1059,33 @@
             const confirmar = await abrirConfirm();
             if (confirmar === null) return;
 
-            if (confirmar === true && window.grupoIdAtual != null) {
-                await fetch(`${API_BASE}/api/eventos/grupo/${window.grupoIdAtual}`, { method: "DELETE" });
-                mostrarToast("Eventos da série removidos!", "success");
-            } else if (confirmar === false && window.eventoAtual) {
-                await fetch(`${API_BASE}/api/eventos/${window.eventoAtual}`, { method: "DELETE" });
-                mostrarToast("Evento removido!", "success");
-            } else if (window.modo === "consulta") {
-                await fetch(`${API_BASE}/api/consultas/${window.consultaAtual}`, { method: "DELETE" });
-                mostrarToast("Atendimento removido!", "success");
+            if (window.modo === "consulta") {
+
+                if (confirmar === true) {
+                    // APAGA TODA RECORRÊNCIA
+                    await fetch(`${API_BASE}/agenda/consulta/${window.consultaAtual}?todos=true`, {
+                        method: "DELETE"
+                    });
+                    mostrarToast("Toda a série removida!", "success");
+
+                } else {
+                    // APAGA SÓ UMA
+                    await fetch(`${API_BASE}/agenda/consulta/${window.consultaAtual}`, {
+                        method: "DELETE"
+                    });
+                    mostrarToast("Consulta removida!", "success");
+                }
+
+            } else if (window.modo === "evento") {
+
+                if (confirmar === true && window.grupoIdAtual != null) {
+                    await fetch(`${API_BASE}/api/eventos/grupo/${window.grupoIdAtual}`, { method: "DELETE" });
+                    mostrarToast("Eventos da série removidos!", "success");
+
+                } else if (confirmar === false && window.eventoAtual) {
+                    await fetch(`${API_BASE}/api/eventos/${window.eventoAtual}`, { method: "DELETE" });
+                    mostrarToast("Evento removido!", "success");
+                }
             }
 
             fecharModal();

@@ -1,10 +1,11 @@
 package psicologa.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.jpa.repository.JpaRepository;
-import jakarta.transaction.Transactional;
+
 import psicologa.model.Consulta;
 
 import java.time.LocalDateTime;
@@ -20,8 +21,9 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long> {
 
     boolean existsByDataHoraBetween(LocalDateTime inicio, LocalDateTime fim);
 
+    // DELETE EM MASSA (VERSÃO FINAL CORRETA)
     @Modifying
     @Transactional
     @Query("DELETE FROM Consulta c WHERE c.grupoRecorrencia = :grupo")
-    void deleteByGrupo(@Param("grupo") String grupo);
+    int deleteByGrupo(@Param("grupo") String grupo);
 }

@@ -10,9 +10,8 @@ import psicologa.model.Paciente;
 import psicologa.repository.ConsultaRepository;
 import psicologa.repository.EventoRepository;
 import psicologa.repository.PacienteRepository;
-import java.time.temporal.TemporalAdjusters;
-import jakarta.transaction.Transactional;
 
+import java.time.temporal.TemporalAdjusters;
 import java.time.*;
 import java.util.*;
 import java.util.UUID;
@@ -31,8 +30,9 @@ public class AgendaController {
     @Autowired
     private EventoRepository eventoRepository;
 
-
+    // =========================
     // AGENDA POR DIA
+    // =========================
     @GetMapping("/dia")
     public List<Map<String, Object>> agendaDia(@RequestParam String data) {
 
@@ -67,7 +67,9 @@ public class AgendaController {
         return lista;
     }
 
-    // AGENDA SEMANAL
+    // =========================
+    // AGENDA SEMANA
+    // =========================
     @GetMapping("/semana")
     public Map<String, List<Map<String, Object>>> agendaSemana(@RequestParam String data) {
 
@@ -112,7 +114,9 @@ public class AgendaController {
         return agenda;
     }
 
+    // =========================
     // HORÁRIOS DISPONÍVEIS
+    // =========================
     @GetMapping("/disponivel")
     public List<String> horariosDisponiveis(@RequestParam String data) {
 
@@ -137,10 +141,7 @@ public class AgendaController {
             boolean ocupado = false;
 
             for (Consulta c : consultas) {
-                LocalDateTime inicioConsulta = c.getDataHora();
-                LocalDateTime fimC = inicioConsulta.plusHours(1);
-
-                if (inicioConsulta.isBefore(fimConsulta) && fimC.isAfter(horario)) {
+                if (c.getDataHora().isEqual(horario)) {
                     ocupado = true;
                     break;
                 }
@@ -163,10 +164,19 @@ public class AgendaController {
         return disponiveis;
     }
 
-
+    // =========================
     // AGENDAR CONSULTA
+    // =========================
     @PostMapping("/agendar")
     public List<Consulta> agendar(@RequestBody Map<String, Object> dados) {
+
+        // VALIDAÇÃO (evita erro 500)
+        if (dados.get("pacienteId") == null ||
+                dados.get("data") == null ||
+                dados.get("hora") == null) {
+
+            throw new RuntimeException("Campos obrigatórios faltando");
+        }
 
         Long pacienteId = Long.parseLong(dados.get("pacienteId").toString());
         String data = dados.get("data").toString();
@@ -174,16 +184,16 @@ public class AgendaController {
 
         List<Integer> diasSemana = (List<Integer>) dados.get("diasSemana");
 
-        Paciente paciente = pacienteRepository.findById(pacienteId).orElseThrow();
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
 
         List<Consulta> consultasCriadas = new ArrayList<>();
 
         LocalDate dataBase = LocalDate.parse(data);
 
-        // gera grupo da recorrência
+        // grupo único por série
         String grupo = UUID.randomUUID().toString();
 
-        // se não vier dias, usa o próprio dia
         if (diasSemana == null || diasSemana.isEmpty()) {
             diasSemana = List.of(dataBase.getDayOfWeek().getValue());
         }
@@ -203,17 +213,13 @@ public class AgendaController {
                 LocalDateTime dataHoraFinal =
                         LocalDateTime.parse(dataConsulta + "T" + hora);
 
-                // VALIDAÇÃO CORRETA (sem bug)
-                boolean ocupado = consultaRepository
-                        .existsByDataHora(dataHoraFinal);
+                boolean ocupado = consultaRepository.existsByDataHora(dataHoraFinal);
 
                 if (!ocupado) {
 
                     Consulta consulta = new Consulta();
                     consulta.setDataHora(dataHoraFinal);
                     consulta.setPaciente(paciente);
-
-                    // ESSENCIAL (isso resolve seu problema)
                     consulta.setGrupoRecorrencia(grupo);
 
                     consultasCriadas.add(consultaRepository.save(consulta));
@@ -224,30 +230,32 @@ public class AgendaController {
         return consultasCriadas;
     }
 
+    // =========================
+    // DELETE CONSULTA
+    // =========================
     @DeleteMapping("/consulta/{id}")
-    @Transactional
-    public void deletarConsulta(
+    public String deletarConsulta(
             @PathVariable Long id,
             @RequestParam(defaultValue = "false") boolean todos
     ) {
 
-        Consulta consulta = consultaRepository.findById(id).orElseThrow();
+        Optional<Consulta> optional = consultaRepository.findById(id);
 
-        System.out.println("ID: " + id);
-        System.out.println("TODOS: " + todos);
-        System.out.println("GRUPO: " + consulta.getGrupoRecorrencia());
+        if (optional.isEmpty()) {
+            return "Consulta não encontrada";
+        }
+
+        Consulta consulta = optional.get();
 
         if (todos && consulta.getGrupoRecorrencia() != null) {
 
-            System.out.println("DELETANDO GRUPO...");
-
-            consultaRepository.deleteByGrupo(
-                    consulta.getGrupoRecorrencia()
-            );
+            int deletados = consultaRepository.deleteByGrupo(consulta.getGrupoRecorrencia());
+            return "Deletados: " + deletados;
 
         } else {
-            System.out.println("DELETANDO UM...");
+
             consultaRepository.deleteById(id);
+            return "Deletado ID: " + id;
         }
     }
 }
