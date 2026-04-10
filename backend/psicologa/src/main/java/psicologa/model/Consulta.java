@@ -22,6 +22,9 @@ public class Consulta {
 
     private String observacao;
 
+    @Column(name = "grupo_recorrencia")
+    private String grupoRecorrencia;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "paciente_id")
     @JsonIgnoreProperties("consultas")
@@ -71,5 +74,15 @@ public class Consulta {
 
     public void setObservacao(String observacao) {
         this.observacao = observacao;
+    }
+
+    // 🔥 GET/SET NOVO
+
+    public String getGrupoRecorrencia() {
+        return grupoRecorrencia;
+    }
+
+    public void setGrupoRecorrencia(String grupoRecorrencia) {
+        this.grupoRecorrencia = grupoRecorrencia;
     }
 }

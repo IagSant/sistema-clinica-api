@@ -149,6 +149,17 @@
     .dias-container input {
         width: auto;
     }
+
+    .autocomplete {
+        position: relative;
+    }
+
+    .autocomplete #sugestoes {
+        position: absolute;
+        top: calc(100% - 15px);
+        left: 0;
+        width: 100%;
+    }
 </style>
 
 
@@ -219,45 +230,63 @@
         let pacientes = []
 
         async function carregarPacientes() {
-            const res = await fetch("http://localhost:8080/api/pacientes")
-            pacientes = await res.json()
+            try {
+                const res = await fetch("http://localhost:8080/api/pacientes");
+
+                if (!res.ok) {
+                    throw new Error("Erro na API");
+                }
+
+                pacientes = await res.json();
+
+                console.log("Pacientes carregados:", pacientes);
+
+            } catch (e) {
+                console.error("Erro ao carregar pacientes:", e);
+            }
         }
 
         const input = document.getElementById("nomePaciente")
         const box = document.getElementById("sugestoes")
 
-        input.addEventListener("focus", () => {
+        input.addEventListener("input", () => {
 
-            box.innerHTML = ""
+            const valor = input.value.toLowerCase();
+            box.innerHTML = "";
 
-            pacientes.forEach(p => {
+            const filtrados = pacientes.filter(p =>
+                p.nome.toLowerCase().includes(valor)
+            );
 
-                const div = document.createElement("div")
-                div.innerText = p.nome
+            filtrados.forEach(p => {
+                const div = document.createElement("div");
+                div.innerText = p.nome;
 
                 div.onclick = () => {
-                    input.value = p.nome
-                    input.dataset.id = p.id
+                    input.value = p.nome;
+                    input.dataset.id = p.id;
 
-                    // 🔥 NOVO: preencher telefone
-                    document.getElementById("telefone").value = p.telefone || ""
+                    document.getElementById("telefone").value = p.telefone || "";
 
-                    box.style.display = "none"
-                }
+                    box.style.display = "none";
+                };
 
-                box.appendChild(div)
-            })
+                box.appendChild(div);
+            });
 
-            box.style.display = pacientes.length ? "block" : "none"
-        })
-        document.addEventListener("click", (e) => {
-            if (!e.target.closest(".autocomplete")) {
-                box.style.display = "none"
-            }
-        })
+            box.style.display = filtrados.length ? "block" : "none";
+
+
+        });
+
+        input.addEventListener("focus", () => {
+            input.dispatchEvent(new Event("input"));
+        });
 
         // CARREGA PACIENTES AO ABRIR A PÁGINA
-        carregarPacientes()
+        window.onload = async () => {
+            await carregarPacientes();
+        };
 
 
         // SUBMIT
@@ -303,39 +332,36 @@
         async function agendar() {
 
             const pacienteId = document.getElementById("nomePaciente").dataset.id;
-
             const data = document.getElementById("data").value;
             const hora = document.getElementById("hora").value;
             const repeticao = document.getElementById("repeticao").value;
 
-            const dias = [];
-            document.querySelectorAll("#diasSemana input:checked")
-                .forEach(cb => dias.push(parseInt(cb.value)));
+            const dias = Array.from(
+                document.querySelectorAll("#diasSemana input:checked")
+            ).map(cb => parseInt(cb.value));
+
+            console.log("DIAS SELECIONADOS:", dias);
 
             if (!pacienteId) {
                 alert("Selecione um paciente!");
                 return;
             }
 
-            if (
-                (repeticao === "semanal" || repeticao === "quinzenal") &&
-                dias.length === 0
-            ) {
-                alert("Selecione pelo menos um dia da semana!");
+            if (repeticao === "semanal" && dias.length === 0) {
+                alert("Selecione pelo menos um dia!");
                 return;
             }
 
             const dados = {
-                pacienteId: pacienteId,
+                pacienteId: Number(pacienteId),
                 data: data,
                 hora: hora,
-                repeticao: repeticao,
                 diasSemana: dias
             };
 
-            console.log(dados);
+            console.log("ENVIANDO:", dados);
 
-            await fetch("http://localhost:8080/api/agendar-recorrente", {
+            const res = await fetch("http://localhost:8080/agenda/agendar", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -343,7 +369,17 @@
                 body: JSON.stringify(dados)
             });
 
+            if (!res.ok) {
+                const erro = await res.text();
+                console.error(erro);
+                alert("Erro ao agendar ❌");
+                return;
+            }
+
             alert("Agendado com sucesso 🚀");
+
+            document.getElementById("formAgendar").reset();
+            document.getElementById("nomePaciente").dataset.id = "";
         }
 
         const repeticaoSelect = document.getElementById("repeticao");
@@ -365,6 +401,15 @@
         // iniciar escondido
         diasDiv.style.display = "none";
 
+        // fechar lista clicando fora
+        document.addEventListener("click", (e) => {
+
+            const autocomplete = document.querySelector(".autocomplete");
+
+            if (!autocomplete.contains(e.target)) {
+                box.style.display = "none";
+            }
+        });
 
 
 
