@@ -1,116 +1,218 @@
 <!DOCTYPE html>
-
 <html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
     <title>Pacientes</title>
 
-</head>
-<style>
-    body {
-        margin: 0;
-        font-family: Arial;
-        background: #f5f5f5;
-    }
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f5f5f5;
+        }
 
-    header {
-        background: #2c3e50;
-        color: white;
-        padding: 15px 20px;
-    }
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+        }
 
-    .container {
-        padding: 20px;
-    }
+        .container {
+            padding: 20px;
+        }
 
-    .topo {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 20px;
-        gap: 10px;
-    }
+        .topo {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
 
-    .controls {
-        display: flex;
-        gap: 10px;
-    }
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
 
-    input,
-    select {
-        padding: 8px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-    }
+        input,
+        select {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
 
-    .lista {
-        background: white;
-        padding: 10px;
-        border-radius: 10px;
-    }
+        .lista {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+        }
 
-    .paciente {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-        cursor: pointer;
-    }
+        .paciente {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
 
-    .paciente:hover {
-        background: #f1f1f1;
-    }
+        .paciente:hover {
+            background: #f1f1f1;
+        }
 
-    /* MODAL */
-    .modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.4);
-        display: none;
-        justify-content: center;
-        align-items: center;
-    }
+        .btn-voltar {
+            display: inline-block;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+        }
 
-    .modal.show {
-        display: flex;
-    }
+        .btn-voltar:hover {
+            background: #1a252f;
+        }
 
-    .modal-content {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        width: 400px;
-    }
+        .modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
 
-    .modal input {
-        width: 100%;
-        margin-bottom: 10px;
-    }
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
 
-    .consulta {
-        background: #f1f1f1;
-        padding: 8px;
-        margin-top: 5px;
-        border-radius: 6px;
-    }
+        .modal-container.show {
+            display: flex;
+        }
 
-    .btn-voltar {
-        display: inline-block;
-        margin-bottom: 15px;
-        padding: 10px 15px;
-        background: #2c3e50;
-        color: white;
-        text-decoration: none;
-        border-radius: 6px;
-    }
+        .modal-box {
+            background: #fff;
+            padding: 30px;
+            width: 450px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
 
-    .btn-voltar:hover {
-        background: #1a252f;
-    }
-</style>
+        .modal-box h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
 
+        .form-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
 
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            outline: none;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            resize: none;
+            height: 80px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn.salvar {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn.fechar {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .consulta {
+            background: #f1f1f1;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 6px;
+            text-align: left;
+        }
+
+        .sem-historico {
+            color: #888;
+            font-size: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 12px 18px;
+            margin: 30px;
+            border-radius: 8px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: 0.3s;
+            z-index: 9999;
+            font-size: 14px;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #toast.success {
+            background: #27ae60;
+        }
+
+        #toast.error {
+            background: #e74c3c;
+        }
+
+        .control-item {
+            height: 38px;
+            padding: 0 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
 </head>
 
 <body>
@@ -119,15 +221,19 @@
 
     <div class="container">
 
-
         <div class="topo">
 
             <a href="agenda.html" class="btn-voltar">← Voltar para Agenda</a>
 
             <div class="controls">
-                <input type="text" id="busca" placeholder="🔍 Buscar">
+                <button onclick="novoPaciente()" class="control-item"
+                    style="background:#27ae60; color:white; border:none; padding:10px 15px; border-radius:6px; cursor:pointer;">
+                    + Inserir Paciente
+                </button>
 
-                <select id="filtro">
+                <input type="text" id="busca" placeholder="🔍 Buscar" class="control-item">
+
+                <select id="filtro" class="control-item">
                     <option value="nome-asc">Nome A-Z</option>
                     <option value="nome-desc">Nome Z-A</option>
                     <option value="data-asc">Data ↑</option>
@@ -139,31 +245,43 @@
 
         <div class="lista" id="lista-pacientes"></div>
 
-
     </div>
 
     <!-- MODAL -->
 
-    <div class="modal" id="modal">
-        <div class="modal-content">
+    <div class="modal-container" id="modal">
+        <div class="modal-box">
+            <h2>🧠 Ficha do Paciente</h2>
 
+            <div class="form-group">
+                <label>Nome</label>
+                <input id="nome" type="text" placeholder="Nome e Sobrenome">
+            </div>
 
-            <h3>Ficha do Paciente</h3>
+            <div class="form-group">
+                <label>Telefone</label>
+                <input id="telefone" type="text" placeholder="+55 41 99999-9999">
+            </div>
 
-            <input id="nome">
-            <input id="telefone">
-            <input id="email">
+            <div class="form-group">
+                <label>Email</label>
+                <input id="email" type="email" placeholder="paciente@email.com">
+            </div>
 
-            <button onclick="salvar()">Salvar</button>
+            <div class="form-group">
+                <label>Observações</label>
+                <textarea id="observacoes" placeholder="Insira as observaçoes do seu paciente"></textarea>
+            </div>
 
-            <h4>Histórico</h4>
-            <div id="historico"></div>
+            <button class="btn salvar" onclick="salvar()">Salvar</button>
 
-            <br>
-            <button onclick="fechar()">Fechar</button>
+            <h3>Histórico</h3>
+            <div id="historico">
+                <p class="sem-historico">Nenhum registro ainda</p>
+            </div>
 
+            <button class="btn fechar" onclick="fechar()">Fechar</button>
         </div>
-
     </div>
 
     <script>
@@ -187,44 +305,29 @@
                 (p.nome || "").toLowerCase().includes(busca)
             )
 
-            if (filtro === "nome-asc") {
-                filtrados.sort((a, b) => a.nome.localeCompare(b.nome))
-            }
-
-            if (filtro === "nome-desc") {
-                filtrados.sort((a, b) => b.nome.localeCompare(a.nome))
-            }
-
-            if (filtro === "data-asc") {
-                filtrados.sort((a, b) => new Date(a.dataCriacao) - new Date(b.dataCriacao))
-            }
-
-            if (filtro === "data-desc") {
-                filtrados.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao))
-            }
+            if (filtro === "nome-asc") filtrados.sort((a, b) => a.nome.localeCompare(b.nome))
+            if (filtro === "nome-desc") filtrados.sort((a, b) => b.nome.localeCompare(a.nome))
+            if (filtro === "data-asc") filtrados.sort((a, b) => new Date(a.dataCriacao) - new Date(b.dataCriacao))
+            if (filtro === "data-desc") filtrados.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao))
 
             lista.innerHTML = ""
 
             filtrados.forEach(p => {
-
                 const div = document.createElement("div")
                 div.classList.add("paciente")
-
                 div.innerText = p.nome
-
                 div.onclick = () => abrirFicha(p)
-
                 lista.appendChild(div)
             })
         }
 
         function abrirFicha(p) {
-
             pacienteSelecionado = p
 
             document.getElementById("nome").value = p.nome
             document.getElementById("telefone").value = p.telefone || ""
             document.getElementById("email").value = p.email || ""
+            document.getElementById("observacoes").value = p.observacoes || ""
 
             carregarHistorico(p.id)
 
@@ -232,7 +335,6 @@
         }
 
         async function carregarHistorico(id) {
-
             const res = await fetch(`http://localhost:8080/api/consultas/paciente/${id}`)
             const consultas = await res.json()
 
@@ -240,31 +342,41 @@
             historico.innerHTML = ""
 
             consultas.forEach(c => {
-
                 const div = document.createElement("div")
                 div.classList.add("consulta")
 
                 const data = new Date(c.dataHora).toLocaleString("pt-BR")
 
                 div.innerHTML = `${data} - ${c.status}`
-
                 historico.appendChild(div)
             })
         }
 
         async function salvar() {
 
-            await fetch(`http://localhost:8080/api/pacientes/${pacienteSelecionado.id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    nome: document.getElementById("nome").value,
-                    telefone: document.getElementById("telefone").value,
-                    email: document.getElementById("email").value
-                })
-            })
+            const dados = {
+                nome: document.getElementById("nome").value,
+                telefone: document.getElementById("telefone").value,
+                email: document.getElementById("email").value,
+                observacoes: document.getElementById("observacoes").value
+            }
 
-            alert("Paciente atualizado!")
+            if (pacienteSelecionado) {
+                await fetch(`http://localhost:8080/api/pacientes/${pacienteSelecionado.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(dados)
+                })
+                mostrarToast("Paciente atualizado!", "success")
+            } else {
+                await fetch(`http://localhost:8080/api/pacientes`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(dados)
+                })
+                mostrarToast("Paciente cadastrado!", "success")
+            }
+
             fechar()
             carregarPacientes()
         }
@@ -273,12 +385,56 @@
             document.getElementById("modal").classList.remove("show")
         }
 
+        function novoPaciente() {
+            pacienteSelecionado = null
+
+            document.getElementById("nome").value = ""
+            document.getElementById("telefone").value = ""
+            document.getElementById("email").value = ""
+            document.getElementById("observacoes").value = ""
+
+            document.getElementById("historico").innerHTML = "<i>Novo paciente</i>"
+
+            document.getElementById("modal").classList.add("show")
+        }
+
         document.getElementById("busca").addEventListener("input", renderizar)
         document.getElementById("filtro").addEventListener("change", renderizar)
 
+        document.getElementById("modal").addEventListener("click", function (e) {
+            if (e.target.id === "modal") {
+                fechar();
+            }
+        });
+
         carregarPacientes()
 
+        function formatarTelefone(input) {
+            let valor = input.value
+
+            // Permite só números, espaço e +
+            valor = valor.replace(/[^0-9+\s]/g, "")
+
+            // Limite geral
+            if (valor.length > 18) valor = valor.slice(0, 18)
+
+            input.value = valor
+        }
+
+        function mostrarToast(mensagem, tipo = "success") {
+            const toast = document.getElementById("toast")
+
+            toast.innerText = mensagem
+            toast.className = `show ${tipo}`
+
+            setTimeout(() => {
+                toast.className = ""
+            }, 3000)
+        }
     </script>
+
+
+    <div id="toast"></div>
 
 </body>
 

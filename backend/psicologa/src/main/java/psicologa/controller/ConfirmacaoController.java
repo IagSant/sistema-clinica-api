@@ -6,7 +6,7 @@ import org.springframework.http.MediaType;
 import psicologa.model.Consulta;
 import psicologa.repository.ConsultaRepository;
 
-@CrossOrigin(origins = "*") // 🔥 AQUI
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api")
 public class ConfirmacaoController {
