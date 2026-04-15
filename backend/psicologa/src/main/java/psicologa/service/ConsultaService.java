@@ -2,10 +2,10 @@ package psicologa.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -26,7 +26,6 @@ public class ConsultaService {
     @Autowired
     private PacienteRepository pacienteRepository;
 
-    // ✅ AGENDAMENTO NORMAL
     public Consulta agendar(Long pacienteId, Consulta consulta) {
 
         if (consulta.getDataHora().isBefore(LocalDateTime.now())) {
@@ -41,11 +40,11 @@ public class ConsultaService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paciente não encontrado"));
 
         consulta.setPaciente(paciente);
+        consulta.setGrupoRecorrencia(null);
 
         return repository.save(consulta);
     }
 
-    // 🔥 AGENDAMENTO RECORRENTE
     public List<Consulta> agendarRecorrente(
             Long pacienteId,
             LocalDate dataInicio,
@@ -59,33 +58,49 @@ public class ConsultaService {
 
         List<Consulta> consultas = new ArrayList<>();
 
-        LocalDate dataFinal = dataInicio.plusMonths(1); // limite
+        if (repeticao == null) repeticao = "nenhum";
+        repeticao = repeticao.toLowerCase();
 
-        for (LocalDate data = dataInicio; !data.isAfter(dataFinal); data = data.plusDays(1)) {
+        String grupoId = String.valueOf(System.currentTimeMillis());
 
-            int diaSemana = data.getDayOfWeek().getValue();
+        System.out.println("GRUPO GERADO: " + grupoId);
 
-            if (!diasSemana.contains(diaSemana)) continue;
+        LocalDate data = dataInicio;
 
-            if (repeticao.equals("quinzenal")) {
-                if (ChronoUnit.WEEKS.between(dataInicio, data) % 2 != 0) continue;
-            }
-
-            if (repeticao.equals("mensal")) {
-                if (data.getDayOfMonth() != dataInicio.getDayOfMonth()) continue;
-            }
+        for (int i = 0; i < 12; i++) {
 
             LocalDateTime dataHora = LocalDateTime.of(data, hora);
 
-            if (dataHora.isBefore(LocalDateTime.now())) continue;
+            if (!dataHora.isBefore(LocalDateTime.now()) &&
+                    !repository.existsByDataHora(dataHora)) {
 
-            if (repository.existsByDataHora(dataHora)) continue;
+                Consulta consulta = new Consulta();
+                consulta.setPaciente(paciente);
+                consulta.setDataHora(dataHora);
+                consulta.setStatus("AGENDADA");
 
-            Consulta consulta = new Consulta();
-            consulta.setPaciente(paciente);
-            consulta.setDataHora(dataHora);
-            consulta.setStatus("AGENDADA");
-            consultas.add(consulta);
+                consulta.setGrupoRecorrencia(grupoId);
+
+                consultas.add(consulta);
+            }
+
+            switch (repeticao) {
+                case "semanal":
+                    data = data.plusWeeks(1);
+                    break;
+
+                case "quinzenal":
+                    data = data.plusWeeks(2);
+                    break;
+
+                case "mensal":
+                    data = data.plusMonths(1);
+                    break;
+
+                default:
+                    i = 999;
+                    break;
+            }
         }
 
         return repository.saveAll(consultas);

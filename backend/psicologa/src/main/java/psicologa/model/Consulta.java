@@ -30,8 +30,6 @@ public class Consulta {
     @JsonIgnoreProperties("consultas")
     private Paciente paciente;
 
-    // GETTERS E SETTERS
-
     public Long getId() {
         return id;
     }
@@ -52,14 +50,6 @@ public class Consulta {
         this.lembreteEnviado = lembreteEnviado;
     }
 
-    public Paciente getPaciente() {
-        return paciente;
-    }
-
-    public void setPaciente(Paciente paciente) {
-        this.paciente = paciente;
-    }
-
     public String getStatus() {
         return status;
     }
@@ -76,7 +66,13 @@ public class Consulta {
         this.observacao = observacao;
     }
 
-    // 🔥 GET/SET NOVO
+    public Paciente getPaciente() {
+        return paciente;
+    }
+
+    public void setPaciente(Paciente paciente) {
+        this.paciente = paciente;
+    }
 
     public String getGrupoRecorrencia() {
         return grupoRecorrencia;

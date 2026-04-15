@@ -333,11 +333,28 @@
         // AGENDAR
         async function agendar() {
 
-            const pacienteId = document.getElementById("nomePaciente").dataset.id;
+            const nomeInput = document.getElementById("nomePaciente");
+            let pacienteId = nomeInput.dataset.id;
+
             const data = document.getElementById("data").value;
             const hora = document.getElementById("hora").value;
             const repeticao = document.getElementById("repeticao").value;
 
+            // 🔥 GARANTE O ID MESMO SEM CLICK
+            if (!pacienteId) {
+                const nomeDigitado = nomeInput.value.toLowerCase();
+
+                const pacienteEncontrado = pacientes.find(p =>
+                    p.nome.toLowerCase() === nomeDigitado
+                );
+
+                if (pacienteEncontrado) {
+                    pacienteId = pacienteEncontrado.id;
+                    nomeInput.dataset.id = pacienteId;
+                }
+            }
+
+            // validações
             if (!pacienteId) {
                 mostrarToast("Selecione um paciente!", "error");
                 return;
@@ -348,20 +365,21 @@
                 return;
             }
 
-            const diaSemana = getDiaSemana(data)
+            // 🔥 VOLTA AQUI (ESSA PARTE SUMIU NO SEU CÓDIGO)
+            const diaSemana = getDiaSemana(data);
 
             const dados = {
                 pacienteId: Number(pacienteId),
                 data: data,
                 hora: hora,
                 repeticao: repeticao,
-                diasSemana: []
+                diasSemana: repeticao !== "nenhum" ? [diaSemana] : []
             };
 
             console.log("ENVIANDO:", dados);
 
             try {
-                const res = await fetch("http://localhost:8080/api/agendar-recorrente", {
+                const res = await fetch("http://localhost:8080/api/consultas", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -379,7 +397,7 @@
                 mostrarToast("Consulta agendada com sucesso ✔", "success");
 
                 form.reset();
-                document.getElementById("nomePaciente").dataset.id = "";
+                nomeInput.dataset.id = "";
 
             } catch (e) {
                 console.error(e);

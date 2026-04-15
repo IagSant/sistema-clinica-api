@@ -2,21 +2,22 @@ package psicologa.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 
 import psicologa.model.Consulta;
-import psicologa.repository.ConsultaRepository;
 import psicologa.model.Paciente;
+import psicologa.repository.ConsultaRepository;
 import psicologa.repository.PacienteRepository;
-import psicologa.service.ConsultaService;
-import psicologa.dto.DadosAgendamentoDTO;
 
+import org.springframework.http.ResponseEntity;
+
+import java.time.*;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Map;
 
-@CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/consultas")
+@CrossOrigin
 public class ConsultaController {
 
     @Autowired
@@ -25,77 +26,106 @@ public class ConsultaController {
     @Autowired
     private PacienteRepository pacienteRepository;
 
-    @Autowired
-    private ConsultaService consultaService; // 👈 FALTAVA ISSO
+    @PostMapping
+    public ResponseEntity<?> criarConsulta(@RequestBody Map<String, Object> dto) {
 
-    // 🔥 SALVAR CONSULTA
-    @PostMapping("/salvar-consulta")
-    public String salvar(
-            @RequestParam Long pacienteId,
-            @RequestParam String dataHora
-    ) {
+        Long pacienteId = Long.valueOf(dto.get("pacienteId").toString());
+        String data = dto.get("data").toString();
+        String hora = dto.get("hora").toString();
+        String repeticao = dto.get("repeticao").toString();
+
+        LocalDate dataBase = LocalDate.parse(data);
+        LocalTime horaBase = LocalTime.parse(hora);
+
+        String grupoId = dto.get("grupoId") != null
+                ? dto.get("grupoId").toString()
+                : String.valueOf(System.currentTimeMillis());
+
+        int totalOcorrencias = 8;
 
         Paciente paciente = pacienteRepository.findById(pacienteId).orElse(null);
 
         if (paciente == null) {
-            return "erro";
+            return ResponseEntity.badRequest().body("Paciente não encontrado");
         }
 
-        Consulta consulta = new Consulta();
+        if ("semanal".equals(repeticao)) {
 
-        consulta.setPaciente(paciente);
-        consulta.setStatus("PENDENTE");
-        consulta.setDataHora(java.time.LocalDateTime.parse(dataHora));
+            for (int i = 0; i < totalOcorrencias; i++) {
+                Consulta c = new Consulta();
+                c.setPaciente(paciente);
+                c.setDataHora(LocalDateTime.of(dataBase.plusWeeks(i), horaBase));
+                c.setGrupoRecorrencia(grupoId);
+                consultaRepository.save(c);
+            }
 
-        consultaRepository.save(consulta);
+        } else if ("quinzenal".equals(repeticao)) {
 
-        return "ok";
+            for (int i = 0; i < totalOcorrencias; i++) {
+                Consulta c = new Consulta();
+                c.setPaciente(paciente);
+                c.setDataHora(LocalDateTime.of(dataBase.plusWeeks(i * 2), horaBase));
+                c.setGrupoRecorrencia(grupoId);
+                consultaRepository.save(c);
+            }
+
+        } else if ("mensal".equals(repeticao)) {
+
+            for (int i = 0; i < totalOcorrencias; i++) {
+                Consulta c = new Consulta();
+                c.setPaciente(paciente);
+                c.setDataHora(LocalDateTime.of(dataBase.plusWeeks(i * 4), horaBase));
+                c.setGrupoRecorrencia(grupoId);
+                consultaRepository.save(c);
+            }
+        } else {
+
+            Consulta c = new Consulta();
+            c.setPaciente(paciente);
+            c.setDataHora(LocalDateTime.of(dataBase, horaBase));
+            c.setGrupoRecorrencia(null);
+            consultaRepository.save(c);
+        }
+
+        return ResponseEntity.ok().build();
     }
 
-    // LISTAR TODAS (AGENDA)
-    @GetMapping(value = "/consultas", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Consulta> listar() {
+    @GetMapping
+    public List<Consulta> listarConsultas() {
         return consultaRepository.findAll();
     }
 
-    // ATUALIZAR
-    @PutMapping("/consultas/{id}")
-    public Consulta atualizar(@PathVariable Long id, @RequestBody Consulta dados) {
-
-        Consulta consulta = consultaRepository.findById(id).orElseThrow();
-
-        if (dados.getStatus() != null) {
-            consulta.setStatus(dados.getStatus());
-        }
-
-        if (dados.getObservacao() != null) {
-            consulta.setObservacao(dados.getObservacao());
-        }
-
-        if (dados.getDataHora() != null) {
-            consulta.setDataHora(dados.getDataHora());
-        }
-
-        return consultaRepository.save(consulta);
-    }
-
-    // DELETAR
-    @DeleteMapping("/consultas/{id}")
-    public void deletar(@PathVariable Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletarUm(@PathVariable Long id) {
         consultaRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 
-    // 🔥 AGENDAMENTO RECORRENTE
-    @PostMapping("/agendar-recorrente")
-    public ResponseEntity<?> agendarRecorrente(@RequestBody DadosAgendamentoDTO dados) {
-        return ResponseEntity.ok(
-                consultaService.agendarRecorrente(
-                        dados.getPacienteId(),
-                        dados.getData(),
-                        dados.getHora(),
-                        dados.getRepeticao(),
-                        dados.getDiasSemana()
-                )
-        );
+    @DeleteMapping("/grupo/{grupoId}")
+    public ResponseEntity<?> deletarGrupo(@PathVariable String grupoId) {
+        consultaRepository.deleteByGrupoRecorrencia(grupoId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> atualizarConsulta(@PathVariable Long id, @RequestBody Map<String, Object> dados) {
+
+        Consulta consulta = consultaRepository.findById(id).orElse(null);
+
+        if (consulta == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (dados.containsKey("observacao")) {
+            consulta.setObservacao((String) dados.get("observacao"));
+        }
+
+        if (dados.containsKey("dataHora")) {
+            consulta.setDataHora(LocalDateTime.parse(dados.get("dataHora").toString()));
+        }
+
+        consultaRepository.save(consulta);
+
+        return ResponseEntity.ok().build();
     }
 }
