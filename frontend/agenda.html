@@ -339,16 +339,16 @@
 
         #toast {
             position: fixed;
-            bottom: 20px;
+            top: 80px;
             right: 20px;
             background: #2c3e50;
             color: white;
             padding: 12px 18px;
             border-radius: 8px;
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(-10px);
             transition: 0.3s;
-            z-index: 10003;
+            z-index: 999999;
             font-size: 14px;
         }
 
@@ -556,9 +556,19 @@
 
         function mostrarToast(mensagem, tipo = "success") {
             const toast = document.getElementById("toast");
+
             toast.innerText = mensagem;
-            toast.className = `show ${tipo}`;
-            setTimeout(() => { toast.className = ""; }, 3000);
+
+            toast.classList.remove("success", "error", "show");
+
+            void toast.offsetWidth;
+
+            toast.classList.add("show");
+            toast.classList.add(tipo);
+
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3000);
         }
 
         // ─── SIDEBAR DIREITA ──────────────────────────────────────────────────────────
@@ -918,37 +928,84 @@
             setTimeout(pintarDataSelecionada, 100);
 
             // ── LEADS ──
+
+            let leadsGlobais = [];
+            let leadsAnteriores = [];
+
             function carregarLeads() {
+
                 fetch(`${API_BASE}/api/leads`)
                     .then(res => res.json())
                     .then(leads => {
-                        const listaEl = document.getElementById("lista-leads");
-                        const contador = document.getElementById("contador");
-                        listaEl.innerHTML = "";
 
-                        leads.forEach(lead => {
-                            const div = document.createElement("div");
-                            div.innerText = lead.nome;
-                            div.style.cursor = "pointer";
-                            div.onclick = () => {
-                                document.getElementById("lead-nome").innerText = lead.nome;
-                                document.getElementById("lead-telefone").innerText = "Telefone: " + lead.telefone;
-                                document.getElementById("lead-email").innerText = "Email: " + lead.email;
-                                document.getElementById("lead-mensagem").innerText = "Mensagem: " + lead.mensagem;
-                                document.getElementById("lead-popup").classList.add("show");
-                            };
-                            listaEl.appendChild(div);
-                        });
+                        if (leadsAnteriores.length > 0 && leads.length > leadsAnteriores.length) {
 
-                        const total = leads.length;
-                        document.title = total > 0 ? `Agenda (${total})` : "Agenda Profissional";
-                        contador.innerText = `(${total})`;
-                    })
-                    .catch(() => { });
+                            const novos = leads.slice(leadsAnteriores.length);
+
+                            novos.forEach(l => {
+                                if (!l.status || !l.status.includes("ATENDIDO")) {
+                                    mostrarToast(`Novo lead: ${l.nome}`, "success");
+                                }
+                            });
+                        }
+
+                        console.log("LEADS ATUAIS:", leads);
+                        console.log("LEADS ANTERIORES:", leadsAnteriores);
+
+                        leadsAnteriores = leads.map(l => ({ ...l }));
+                        leadsGlobais = leads;
+
+                        renderizarLeads();
+                    });
+
+
             }
 
-            carregarLeads();
-            setInterval(carregarLeads, 5000);
+            function renderizarLeads() {
+                const listaEl = document.getElementById("lista-leads");
+                const contador = document.getElementById("contador");
+                const titulo = document.getElementById("titulo-agenda");
+
+                listaEl.innerHTML = "";
+
+                leadsGlobais.forEach(lead => {
+                    const div = document.createElement("div");
+                    div.innerText = lead.nome;
+
+                    let cor = "#f1f1f1";
+
+                    const criadoEm = new Date(lead.dataHora || lead.criadoEm);
+                    const diffMin = Math.floor((Date.now() - criadoEm) / 60000);
+
+                    if ((lead.status || "").includes("ATENDIDO")) {
+                        cor = "#3498db"; //  azul
+                    } else if (diffMin <= 10) {
+                        cor = "#2ecc71"; //  verde
+                    } else if (diffMin <= 20) {
+                        cor = "#f1c40f"; //  amarelo
+                    } else {
+                        cor = "#e74c3c"; //  vermelho
+                    }
+
+                    div.style.background = cor;
+                    div.style.color = "white";
+
+                    listaEl.appendChild(div);
+                });
+
+                const naoAtendidos = leadsGlobais.filter(l => !(l.status || "").includes("ATENDIDO"));
+                const total = naoAtendidos.length;
+
+                contador.innerText = `(${total})`;
+
+                document.title = total > 0
+                    ? `(${total}) Agenda Profissional`
+                    : `Agenda Profissional`;
+            }
+
+            carregarLeads(); // primeira carga
+            setInterval(carregarLeads, 5000); // busca novos leads
+            setInterval(renderizarLeads, 1000); // atualiza cor em tempo real
 
             // ── Onchange do select de repetição (delegado uma vez) ──
             document.getElementById("repeticao").addEventListener("change", function () {
