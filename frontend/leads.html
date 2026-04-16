@@ -1,118 +1,384 @@
 <!DOCTYPE html>
-
 <html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
     <title>Leads</title>
 
-</head>
-<style>
-    body {
-        margin: 0;
-        font-family: Arial;
-        background: #f5f5f5;
-    }
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f5f5f5;
+        }
 
-    header {
-        background: #2c3e50;
-        color: white;
-        padding: 15px 20px;
-        font-size: 18px;
-    }
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+        }
 
-    .container {
-        padding: 20px;
-    }
+        .container {
+            padding: 20px;
+        }
 
-    .lead {
-        background: white;
-        padding: 15px;
-        margin-bottom: 10px;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
+        .lead {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            border-left: 5px solid #ccc;
+            transition: 0.2s;
+        }
 
-    .lead strong {
-        font-size: 16px;
-        color: #2c3e50;
-    }
+        .lead:hover {
+            transform: translateY(-2px);
+        }
 
-    .lead p {
-        margin: 5px 0;
-        color: #555;
-        font-size: 14px;
-    }
+        .lead strong {
+            font-size: 16px;
+            color: #2c3e50;
+        }
 
-    .btn-voltar {
-        display: inline-block;
-        margin-bottom: 15px;
-        padding: 10px 15px;
-        background: #2c3e50;
-        color: white;
-        text-decoration: none;
-        border-radius: 6px;
-    }
+        .lead p {
+            margin: 5px 0;
+            color: #555;
+            font-size: 14px;
+        }
 
-    .btn-voltar:hover {
-        background: #1a252f;
-    }
-</style>
+        .tempo {
+            font-size: 12px;
+            color: #888;
+        }
 
+        .btn-voltar {
+            display: inline-block;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+
+        .btn-voltar:hover {
+            background: #1a252f;
+        }
+
+        /* MODAL */
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+        }
+
+        .popup.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .popup-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 320px;
+        }
+
+        .popup-content button {
+            width: 100%;
+            margin-top: 8px;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            background: #2c3e50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .popup-content button:hover {
+            background: #1a252f;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: 0.3s;
+            z-index: 9999;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #toast.success {
+            background: #27ae60;
+        }
+
+        #toast.error {
+            background: #e74c3c;
+        }
+
+        .filtros {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        .filtros input {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        .filtros button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #2c3e50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .filtros button:hover {
+            background: #1a252f;
+        }
+
+        .container>div:first-child {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+    </style>
 </head>
 
 <body>
 
-<header>
-    📋 Lista de Leads
-</header>
+    <header>
+        📋 Lista de Leads
+    </header>
 
-<div class="container">
+    <div class="container">
 
-    <a href="agenda.html" class="btn-voltar">← Voltar para Agenda</a>
+        <div>
+            <a href="agenda.html" class="btn-voltar">← Voltar para Agenda</a>
 
-    <div id="lista-leads"></div>
+            <div class="filtros">
+                <input type="text" id="filtro-nome" placeholder="Buscar por nome">
 
-</div>
+                <input type="date" id="filtro-data">
 
-<script>
+                <button onclick="carregarLeads()">Filtrar</button>
+            </div>
+        </div>
 
-    function carregarLeads() {
-        fetch("http://localhost:8080/api/leads")
-            .then(res => res.json())
-            .then(data => {
+        <div id="lista-leads"></div>
 
-                const lista = document.getElementById("lista-leads")
-                lista.innerHTML = ""
+    </div>
 
-                if (data.length === 0) {
-                    lista.innerHTML = "<p>Nenhum lead encontrado.</p>"
-                    return
-                }
+    <!-- MODAL -->
+    <div id="lead-modal" class="popup">
+        <div class="popup-content">
+            <h3 id="modal-nome"></h3>
+            <p id="modal-telefone"></p>
+            <p id="modal-email"></p>
+            <p id="modal-mensagem"></p>
 
-                data.forEach(lead => {
+            <button onclick="abrirWhatsApp(leadSelecionado)">Entrar em contato</button>
+            <button onclick="marcarAtendido()">Marcar como atendido</button>
+            <button onclick="fecharModal()">Fechar</button>
+        </div>
+    </div>
 
-                    const div = document.createElement("div")
-                    div.classList.add("lead")
+    <script>
 
-                    div.innerHTML = `
-                        <strong>${lead.nome}</strong>
-                        <p>📞 ${lead.telefone}</p>
-                        <p>📧 ${lead.email}</p>
-                        <p>💬 ${lead.mensagem}</p>
-                    `
+        let leadSelecionado = null
 
-                    lista.appendChild(div)
+        function calcularTempo(dataCriacao) {
+            if (!dataCriacao) return 0
+            const agora = new Date()
+            const criado = new Date(dataCriacao)
+            return Math.floor((agora - criado) / 60000)
+        }
+
+        function carregarLeads() {
+            fetch("http://localhost:8080/api/leads")
+                .then(res => res.json())
+                .then(data => {
+
+                    const lista = document.getElementById("lista-leads")
+                    lista.innerHTML = ""
+
+                    if (data.length === 0) {
+                        lista.innerHTML = "<p>Nenhum lead encontrado.</p>"
+                        return
+                    }
+
+                    data.forEach(lead => {
+
+                        const div = document.createElement("div")
+                        div.classList.add("lead")
+
+                        const criado = new Date(lead.criadoEm)
+                        const agora = new Date()
+                        const minutos = Math.floor((agora - criado) / 60000)
+
+                        let cor = "#2ecc71"
+
+                        if (!lead.atendidoEm) {
+                            if (minutos > 10 && minutos <= 20) {
+                                cor = "#f1c40f"
+                            } else if (minutos > 20) {
+                                cor = "#e74c3c"
+                            }
+                        } else {
+                            cor = "#3498db"
+                        }
+
+                        div.style.borderLeft = `5px solid ${cor}`
+
+                        let tempoTexto = ""
+
+                        if (!lead.atendidoEm) {
+                            tempoTexto = `⏱ ${minutos} min atrás`
+                        } else {
+                            const atendido = new Date(lead.atendidoEm)
+
+                            // tempo de resposta
+                            const diffAtendimento = Math.floor((atendido - criado) / 60000)
+
+                            const dataFormatada = atendido.toLocaleDateString("pt-BR")
+                            const horaFormatada = atendido.toLocaleTimeString("pt-BR", {
+                                hour: "2-digit",
+                                minute: "2-digit"
+                            })
+
+                            tempoTexto = `✅ Atendido em ${diffAtendimento} min (${dataFormatada} às ${horaFormatada})`
+                        }
+
+                        div.innerHTML = `
+                            <strong>Paciente: ${lead.nome}</strong>
+                            <p>📞 ${lead.telefone}</p>
+                            <p class="tempo">${tempoTexto}</p>
+                        `
+
+                        div.onclick = () => abrirModal(lead)
+
+                        lista.appendChild(div)
+                    })
+                })
+                .catch(err => {
+                    console.error("Erro ao carregar leads:", err)
+                })
+        }
+
+        function abrirModal(lead) {
+            leadSelecionado = lead
+
+            document.getElementById("modal-nome").innerText = "Paciente: " + lead.nome
+            document.getElementById("modal-telefone").innerHTML = "<strong>Telefone:</strong> " + lead.telefone
+            document.getElementById("modal-email").innerHTML = "<strong>Email:</strong> " + lead.email
+            document.getElementById("modal-mensagem").innerHTML = "<strong>Mensagem:</strong> " + lead.mensagem
+
+            document.getElementById("lead-modal").classList.add("show")
+        }
+
+        function fecharModal() {
+            document.getElementById("lead-modal").classList.remove("show")
+        }
+
+        async function marcarAtendido() {
+
+            const res = await fetch(`http://localhost:8080/api/leads/${leadSelecionado.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    status: "ATENDIDO"
                 })
             })
-            .catch(err => {
-                console.error("Erro ao carregar leads:", err)
-            })
-    }
 
-    carregarLeads()
+            if (res.ok) {
+                mostrarToast("Lead marcado como atendido!", "success")
+                fecharModal()
+                carregarLeads()
+            } else {
+                mostrarToast("Erro ao atualizar lead", "error")
+            }
+        }
 
-</script>
+        function mostrarToast(mensagem, tipo = "success") {
+            const toast = document.getElementById("toast");
+
+            if (!toast) return;
+
+            toast.innerText = mensagem;
+            toast.className = `show ${tipo}`;
+
+            setTimeout(() => {
+                toast.className = "";
+            }, 3000);
+        }
+
+        function formatarTelefoneWhatsApp(telefone) {
+            return telefone.replace(/\D/g, "") // remove tudo que não é número
+        }
+
+        function abrirWhatsApp(lead) {
+            const numero = formatarTelefoneWhatsApp(lead.telefone)
+
+            const mensagem = `Olá ${lead.nome}, vi que você entrou em contato. Como posso te ajudar?`
+
+            const url = `https://wa.me/55${numero}?text=${encodeURIComponent(mensagem)}`
+
+            window.open(url, "_blank")
+        }
+
+        function abrirWhatsApp(lead) {
+            const numero = formatarTelefoneWhatsApp(lead.telefone)
+
+            const mensagem = `Olá ${lead.nome}, tudo bem? 😊  
+                            Aqui é a Psicóloga Julia Colheri.
+
+                            Recebi seu contato e estou disponível para te ajudar.  
+                            Podemos conversar um pouco?`
+
+            const url = `https://wa.me/55${numero}?text=${encodeURIComponent(mensagem)}`
+
+            window.open(url, "_blank")
+
+        }
+
+        carregarLeads()
+        setInterval(carregarLeads, 30000)
+
+    </script>
+
+    <div id="toast"></div>
 
 </body>
 

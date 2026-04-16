@@ -40,6 +40,7 @@ public class AgendaController {
             item.put("tipo", "consulta");
             item.put("horario", c.getDataHora());
             item.put("descricao", "Consulta com " + c.getPaciente().getNome());
+            item.put("status", c.getStatus());
             lista.add(item);
         }
 
@@ -89,6 +90,7 @@ public class AgendaController {
                 item.put("tipo", "consulta");
                 item.put("horario", c.getDataHora());
                 item.put("descricao", "Consulta com " + c.getPaciente().getNome());
+                item.put("status", c.getStatus());
                 listaDia.add(item);
             }
 

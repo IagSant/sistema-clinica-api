@@ -598,7 +598,21 @@
 
                     const div = document.createElement("div");
                     div.classList.add("evento");
-                    div.style.borderLeftColor = e.tipo === "consulta" ? "#2ecc71" : "#3498db";
+                    if (e.tipo === "consulta") {
+
+                        let cor = "#f1c40f"; // amarelo (pendente)
+
+                        if (e.status === "CONFIRMADO") {
+                            cor = "#2ecc71";
+                        } else if (e.status === "CANCELADO") {
+                            cor = "#e74c3c";
+                        }
+
+                        div.style.borderLeftColor = cor;
+
+                    } else {
+                        div.style.borderLeftColor = "#3498db";
+                    }
                     div.innerHTML = `
                         <strong style="color:#2c3e50;">${hora}</strong>
                         <div style="color:#555;font-size:13px;margin-top:3px;">${e.descricao || e.nome || "Sem descrição"}</div>
@@ -827,20 +841,28 @@
                             const inicio = new Date(c.dataHora);
                             const fim = new Date(inicio.getTime() + 60 * 60 * 1000);
 
+                            let cor = "#f1c40f"; // 🟡 padrão (pendente)
+
+                            if (c.status === "CONFIRMADO") {
+                                cor = "#2ecc71"; // 🟢
+                            } else if (c.status === "CANCELADO") {
+                                cor = "#e74c3c"; // 🔴
+                            }
+
                             eventos.push({
                                 id: c.id,
                                 title: c.paciente?.nome || "Paciente",
                                 start: inicio,
                                 end: fim,
-                                color: "#2ecc71",
+                                color: cor,
                                 extendedProps: {
                                     tipo: "consulta",
                                     id: c.id,
-                                    grupoId: c.grupoRecorrencia
+                                    grupoId: c.grupoRecorrencia,
+                                    status: c.status
                                 }
                             });
                         });
-
                         // EVENTOS
                         eventosApi.forEach(e => {
                             eventos.push({

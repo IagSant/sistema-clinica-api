@@ -11,7 +11,6 @@ import psicologa.repository.PacienteRepository;
 import org.springframework.http.ResponseEntity;
 
 import java.time.*;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +55,7 @@ public class ConsultaController {
                 c.setPaciente(paciente);
                 c.setDataHora(LocalDateTime.of(dataBase.plusWeeks(i), horaBase));
                 c.setGrupoRecorrencia(grupoId);
+                c.setStatus("PENDENTE");
                 consultaRepository.save(c);
             }
 
@@ -66,6 +66,7 @@ public class ConsultaController {
                 c.setPaciente(paciente);
                 c.setDataHora(LocalDateTime.of(dataBase.plusWeeks(i * 2), horaBase));
                 c.setGrupoRecorrencia(grupoId);
+                c.setStatus("PENDENTE");
                 consultaRepository.save(c);
             }
 
@@ -76,14 +77,17 @@ public class ConsultaController {
                 c.setPaciente(paciente);
                 c.setDataHora(LocalDateTime.of(dataBase.plusWeeks(i * 4), horaBase));
                 c.setGrupoRecorrencia(grupoId);
+                c.setStatus("PENDENTE");
                 consultaRepository.save(c);
             }
+
         } else {
 
             Consulta c = new Consulta();
             c.setPaciente(paciente);
             c.setDataHora(LocalDateTime.of(dataBase, horaBase));
             c.setGrupoRecorrencia(null);
+            c.setStatus("PENDENTE");
             consultaRepository.save(c);
         }
 
@@ -122,6 +126,10 @@ public class ConsultaController {
 
         if (dados.containsKey("dataHora")) {
             consulta.setDataHora(LocalDateTime.parse(dados.get("dataHora").toString()));
+        }
+
+        if (dados.containsKey("status")) {
+            consulta.setStatus(dados.get("status").toString());
         }
 
         consultaRepository.save(consulta);

@@ -28,14 +28,16 @@
             padding: 15px;
             margin-bottom: 10px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .consulta strong {
             color: #2c3e50;
         }
 
-        select, button, input {
+        select,
+        button,
+        input {
             margin-top: 10px;
             padding: 8px;
             border-radius: 6px;
@@ -73,129 +75,178 @@
             gap: 10px;
             flex-wrap: wrap;
         }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2c3e50;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: 0.3s;
+            z-index: 1000;
+            font-size: 14px;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #toast.success {
+            background: #27ae60;
+        }
+
+        #toast.error {
+            background: #e74c3c;
+        }
     </style>
 </head>
 
 <body>
 
-<header>
-    ✏️ Editar Consultas
-</header>
+    <header>
+        ✏️ Editar Consultas
+    </header>
 
-<div class="container">
+    <div class="container">
 
-    <a href="agenda.html" class="btn-voltar">← Voltar para Agenda</a>
+        <a href="agenda.html" class="btn-voltar">← Voltar para Agenda</a>
 
-    <!-- 🔥 FILTROS -->
-    <div class="filtros">
-        <input type="text" id="filtroNome" placeholder="Buscar por paciente">
-        <input type="date" id="filtroData">
-        <button onclick="carregarConsultas()">Filtrar</button>
+        <div class="filtros">
+            <input type="text" id="filtroNome" placeholder="Buscar por paciente">
+            <input type="date" id="filtroData">
+            <button onclick="carregarConsultas()">Filtrar</button>
+        </div>
+
+        <div id="lista-consultas"></div>
+
     </div>
 
-    <div id="lista-consultas"></div>
+    <script>
 
-</div>
+        function carregarConsultas() {
 
-<script>
+            const nomeFiltro = document.getElementById("filtroNome").value.toLowerCase()
+            const dataFiltro = document.getElementById("filtroData").value
 
-function carregarConsultas() {
+            fetch("http://localhost:8080/api/consultas")
+                .then(res => res.json())
+                .then(data => {
 
-    const nomeFiltro = document.getElementById("filtroNome").value.toLowerCase()
-    const dataFiltro = document.getElementById("filtroData").value
+                    const lista = document.getElementById("lista-consultas")
+                    lista.innerHTML = ""
 
-    fetch("http://localhost:8080/api/consultas")
-        .then(res => res.json())
-        .then(data => {
+                    // 🔥 FILTRO AQUI
+                    const filtrados = data.filter(c => {
 
-            const lista = document.getElementById("lista-consultas")
-            lista.innerHTML = ""
+                        const nomePaciente = c.paciente?.nome?.toLowerCase() || ""
+                        const dataConsulta = c.dataHora?.split("T")[0] || ""
 
-            // 🔥 FILTRO AQUI
-            const filtrados = data.filter(c => {
+                        const matchNome = nomePaciente.includes(nomeFiltro)
+                        const matchData = !dataFiltro || dataConsulta === dataFiltro
 
-                const nomePaciente = c.paciente?.nome?.toLowerCase() || ""
-                const dataConsulta = c.dataHora?.split("T")[0] || ""
+                        return matchNome && matchData
+                    })
 
-                const matchNome = nomePaciente.includes(nomeFiltro)
-                const matchData = !dataFiltro || dataConsulta === dataFiltro
+                    if (filtrados.length === 0) {
+                        lista.innerHTML = "<p>Nenhuma consulta encontrada.</p>"
+                        return
+                    }
 
-                return matchNome && matchData
-            })
+                    filtrados.forEach(c => {
 
-            if (filtrados.length === 0) {
-                lista.innerHTML = "<p>Nenhuma consulta encontrada.</p>"
-                return
-            }
+                        const dataFormatada = new Date(c.dataHora).toLocaleString("pt-BR")
 
-            filtrados.forEach(c => {
+                        const div = document.createElement("div")
+                        div.classList.add("consulta")
 
-                const dataFormatada = new Date(c.dataHora).toLocaleString("pt-BR")
+                        if (c.status === "CONFIRMADO") {
+                            div.style.borderLeft = "5px solid #2ecc71"
+                        } else if (c.status === "CANCELADO") {
+                            div.style.borderLeft = "5px solid #e74c3c"
+                        } else {
+                            div.style.borderLeft = "5px solid #f1c40f"
+                        }
 
-                const div = document.createElement("div")
-                div.classList.add("consulta")
+                        div.innerHTML = `
+                            <strong>${c.paciente?.nome || "Sem nome"}</strong><br>
+                                📅 ${dataFormatada}<br>
+                             Status: <span class="status" id="label-status-${c.id}">${c.status}</span><br>
 
-                div.innerHTML = `
-                    <strong>${c.paciente?.nome || "Sem nome"}</strong><br>
-                    📅 ${dataFormatada}<br>
-                    Status: <span class="status" id="label-status-${c.id}">${c.status}</span><br>
+                        <select id="status-${c.id}">
+                            <option value="PENDENTE">Pendente</option>
+                            <option value="CONFIRMADO">Confirmado</option>
+                            <option value="CANCELADO">Cancelado</option>
+                        </select>
 
-                    <select id="status-${c.id}">
-                        <option value="PENDENTE">Pendente</option>
-                        <option value="CONFIRMADO">Confirmado</option>
-                        <option value="CANCELADO">Cancelado</option>
-                    </select>
+                        <br>
 
-                    <br>
+                        <button onclick="atualizarStatus(${c.id})">Salvar</button>
+                     `
 
-                    <button onclick="atualizarStatus(${c.id})">Salvar</button>
-                `
+                        lista.appendChild(div)
 
-                lista.appendChild(div)
-
-                // mantém selecionado corretamente
-                document.getElementById("status-" + c.id).value = c.status
-            })
-        })
-}
-
-async function atualizarStatus(id) {
-
-    const novoStatus = document.getElementById("status-" + id).value
-
-    const res = await fetch(`http://localhost:8080/api/consultas/${id}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            status: novoStatus
-        })
-    })
-
-    if (res.ok) {
-
-        document.getElementById("label-status-" + id).innerText = novoStatus
-
-        alert("Status atualizado!")
-
-        // 🔥 atualiza agenda automaticamente
-        if (window.opener && window.opener.calendar) {
-            window.opener.calendar.refetchEvents()
+                        document.getElementById("status-" + c.id).value = c.status
+                    })
+                })
         }
 
-    } else {
-        alert("Erro ao atualizar")
-    }
-}
+        async function atualizarStatus(id) {
 
-// 🔥 filtro automático enquanto digita
-document.getElementById("filtroNome").addEventListener("input", carregarConsultas)
-document.getElementById("filtroData").addEventListener("change", carregarConsultas)
+            const novoStatus = document.getElementById("status-" + id).value
 
-carregarConsultas()
+            const res = await fetch(`http://localhost:8080/api/consultas/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    status: novoStatus
+                })
+            })
 
-</script>
+            if (res.ok) {
+
+                document.getElementById("label-status-" + id).innerText = novoStatus
+
+                mostrarToast("Status atualizado!", "success")
+
+                if (window.opener && window.opener.calendar) {
+                    window.opener.calendar.refetchEvents()
+                }
+
+            } else {
+                mostrarToast("Erro ao atualizar", "error")
+            }
+        }
+
+        document.getElementById("filtroNome").addEventListener("input", carregarConsultas)
+        document.getElementById("filtroData").addEventListener("change", carregarConsultas)
+
+        function mostrarToast(mensagem, tipo = "success") {
+            const toast = document.getElementById("toast");
+
+            if (!toast) return; // segurança
+
+            toast.innerText = mensagem;
+            toast.className = `show ${tipo}`;
+
+            setTimeout(() => {
+                toast.className = "";
+            }, 3000);
+        }
+
+        carregarConsultas()
+
+    </script>
+
+
+    <div id="toast"></div>
 
 </body>
+
 </html>
