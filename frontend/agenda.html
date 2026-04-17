@@ -133,15 +133,16 @@
             margin: 0;
             font-family: 'Segoe UI', Arial, sans-serif;
             background: #eef2f7;
-            overflow: auto;
+            overflow: hidden;
         }
 
         .container {
             display: flex;
-            min-height: calc(100vh - 60px);
-            margin-top: 50px;
-            padding: 5px;
-            gap: 5px;
+            height: calc(100vh - 70px);
+            margin-top: 70px;
+            padding: 10px;
+            gap: 10px;
+            box-sizing: border-box;
         }
 
         .sidebar-left {
@@ -245,6 +246,7 @@
             border-left: 1px solid #ddd;
             padding: 15px;
             overflow-y: auto;
+            max-height: 100%;
             border-radius: 12px;
             margin-top: 10px;
             text-align: center;
@@ -386,6 +388,182 @@
             border-radius: 999px;
             font-weight: 600;
         }
+
+        .fc-toolbar-title {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .fc-toolbar-title::before {
+            content: "Período";
+            font-size: 13px;
+            color: #888;
+            text-transform: capitalize;
+        }
+
+        .fc-toolbar-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .fc-day-today {
+            background-color: #f7f7f7 !important;
+            border-left: 2px solid #3498db;
+            /* linha azul discreta */
+        }
+
+        .btn-tema {
+            margin-left: auto;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            font-size: 18px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-tema:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        body.dark {
+            background: #181a1b;
+            color: #e4e4e4;
+        }
+
+        /* HEADER */
+        body.dark .header {
+            background: #1c1f21;
+        }
+
+        /* SIDEBARS */
+        body.dark .sidebar-left,
+        body.dark .sidebar-right {
+            background: #202324;
+            border-color: #2c2f31;
+        }
+
+        /* CALENDÁRIO */
+        body.dark #calendar {
+            background: #202324;
+        }
+
+        /* GRID DO CALENDÁRIO */
+        body.dark .fc-timegrid-slot {
+            border-color: rgba(255, 255, 255, 0.04);
+        }
+
+        body.dark .fc-scrollgrid td,
+        body.dark .fc-scrollgrid th {
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        body.dark .fc-scrollgrid {
+            border-color: #2a2a2a;
+        }
+
+        /*Dark theme */
+        body.dark {
+            background: #181a1b;
+            color: #e4e4e4;
+        }
+
+        /* HEADER (MANTÉM AZUL) */
+        body.dark .header {
+            background: #2c3e50;
+        }
+
+        /* SIDEBARS (CINZA NEUTRO) */
+        body.dark .sidebar-left,
+        body.dark .sidebar-right {
+            background: #202324;
+            border-color: #2c2f31;
+        }
+
+        /* ================= CALENDÁRIO (CINZA, NÃO AZUL) ================= */
+
+        body.dark #calendar {
+            background: #232526;
+            /* 🎯 CINZA NEUTRO */
+            border-radius: 12px;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03);
+        }
+
+        /* garante que tudo dentro também fique cinza */
+        body.dark .fc-theme-standard td,
+        body.dark .fc-theme-standard th {
+            background: #232526 !important;
+        }
+
+        /* ================= GRID SUAVE ================= */
+
+        body.dark .fc-timegrid-slot {
+            border-color: rgba(255, 255, 255, 0.03);
+        }
+
+        body.dark .fc-scrollgrid td,
+        body.dark .fc-scrollgrid th {
+            border-color: rgba(255, 255, 255, 0.04);
+        }
+
+        body.dark .fc-scrollgrid {
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* ================= TEXTO ================= */
+
+        body.dark .fc {
+            color: #ddd;
+        }
+
+        body.dark .fc-timegrid-axis {
+            color: #888;
+        }
+
+        body.dark .fc-toolbar-title {
+            color: #dce3ea;
+        }
+
+        /* ================= DIA ATUAL ================= */
+
+        body.dark .fc-day-today {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border-left: 2px solid #3498db;
+        }
+
+        /* ================= HOVER ================= */
+
+        body.dark .fc-timegrid-slot:hover {
+            background: rgba(255, 255, 255, 0.03) !important;
+        }
+
+        /* ================= MINI CALENDÁRIO ================= */
+
+        body.dark #miniCalendar .fc-daygrid-day-frame {
+            background: #2a2d2f !important;
+        }
+
+        body.dark #miniCalendar .fc-daygrid-day:hover {
+            background: #34393d !important;
+        }
+
+        /* ================= LEADS ================= */
+
+        body.dark #lista-leads div {
+            background: #2a2a2a;
+        }
+
+        /* ================= EVENTOS ================= */
+
+        body.dark .fc-event {
+            box-shadow: none;
+        }
     </style>
 </head>
 
@@ -394,6 +572,7 @@
     <div class="header">
         <span id="menu-btn">☰</span>
         <span>📅 Agenda</span>
+        <button class="btn-tema" onclick="toggleTema()">🌙</button>
     </div>
 
     <div id="menu-lateral">
@@ -964,11 +1143,26 @@
             function renderizarLeads() {
                 const listaEl = document.getElementById("lista-leads");
                 const contador = document.getElementById("contador");
-                const titulo = document.getElementById("titulo-agenda");
 
                 listaEl.innerHTML = "";
 
-                leadsGlobais.forEach(lead => {
+                const hoje = new Date();
+
+                const leadsHoje = leadsGlobais.filter(lead => {
+                    const dataLead = new Date(lead.dataHora || lead.criadoEm);
+
+                    return dataLead.getDate() === hoje.getDate() &&
+                        dataLead.getMonth() === hoje.getMonth() &&
+                        dataLead.getFullYear() === hoje.getFullYear();
+                });
+
+                leadsHoje.sort((a, b) => {
+                    const dataA = new Date(a.dataHora || a.criadoEm)
+                    const dataB = new Date(b.dataHora || b.criadoEm)
+                    return dataB - dataA
+                })
+
+                leadsHoje.forEach(lead => {
                     const div = document.createElement("div");
                     div.innerText = lead.nome;
 
@@ -978,13 +1172,13 @@
                     const diffMin = Math.floor((Date.now() - criadoEm) / 60000);
 
                     if ((lead.status || "").includes("ATENDIDO")) {
-                        cor = "#3498db"; //  azul
+                        cor = "#3498db";
                     } else if (diffMin <= 10) {
-                        cor = "#2ecc71"; //  verde
+                        cor = "#2ecc71";
                     } else if (diffMin <= 20) {
-                        cor = "#f1c40f"; //  amarelo
+                        cor = "#f1c40f";
                     } else {
-                        cor = "#e74c3c"; //  vermelho
+                        cor = "#e74c3c";
                     }
 
                     div.style.background = cor;
@@ -993,7 +1187,7 @@
                     listaEl.appendChild(div);
                 });
 
-                const naoAtendidos = leadsGlobais.filter(l => !(l.status || "").includes("ATENDIDO"));
+                const naoAtendidos = leadsHoje.filter(l => !(l.status || "").includes("ATENDIDO"));
                 const total = naoAtendidos.length;
 
                 contador.innerText = `(${total})`;
@@ -1262,6 +1456,33 @@
             document.getElementById("modal-consulta").classList.add("show");
             respostaConfirmacao(null);
         }
+
+        function toggleTema() {
+            const body = document.body;
+            const btn = document.querySelector(".btn-tema");
+
+            body.classList.toggle("dark");
+
+            const isDark = body.classList.contains("dark");
+
+            if (btn) {
+                btn.innerText = isDark ? "☀️" : "🌙";
+            }
+
+            localStorage.setItem("tema", isDark ? "dark" : "light");
+        }
+
+        // aplica automaticamente ao abrir QUALQUER página
+        (function () {
+            const tema = localStorage.getItem("tema");
+
+            if (tema === "dark") {
+                document.body.classList.add("dark");
+
+                const btn = document.querySelector(".btn-tema");
+                if (btn) btn.innerText = "☀️";
+            }
+        })();
 
     </script>
 

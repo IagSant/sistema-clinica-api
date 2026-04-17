@@ -237,6 +237,12 @@
                         return
                     }
 
+                    data.sort((a, b) => {
+                        const dataA = new Date(a.dataHora || a.criadoEm)
+                        const dataB = new Date(b.dataHora || b.criadoEm)
+                        return dataB - dataA
+                    })
+
                     data.forEach(lead => {
 
                         const div = document.createElement("div")
